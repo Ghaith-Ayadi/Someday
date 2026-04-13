@@ -12,14 +12,14 @@ interface FilterPopoverProps {
     options: FilterOption[];
     selected: Set<string>;
     onChange: (selected: Set<string>) => void;
-    trigger: React.ReactNode;
+    icon: React.ComponentType<{ className?: string }>;
+    label?: string;
 }
 
-export function FilterPopover({ options, selected, onChange, trigger }: FilterPopoverProps) {
+export function FilterPopover({ options, selected, onChange, icon: Icon, label }: FilterPopoverProps) {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
-    // Close on outside click
     useEffect(() => {
         if (!isOpen) return;
         const handler = (e: MouseEvent) => {
@@ -46,7 +46,17 @@ export function FilterPopover({ options, selected, onChange, trigger }: FilterPo
 
     return (
         <div ref={ref} className="relative">
-            <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={cx(
+                    "flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold transition duration-100 ease-linear",
+                    isOpen ? "bg-active text-secondary" : "text-tertiary hover:text-secondary hover:bg-primary_hover",
+                )}
+            >
+                <Icon className="size-4" />
+                {label && <span>{label}</span>}
+            </button>
             {isOpen && (
                 <div className="absolute right-0 z-50 mt-1 w-52 overflow-hidden rounded-lg bg-primary shadow-lg ring-1 ring-secondary_alt">
                     <div className="max-h-72 overflow-y-auto py-1">
@@ -89,10 +99,10 @@ interface SortPopoverProps<T extends string> {
     options: { id: T; label: string }[];
     value: T;
     onChange: (value: T) => void;
-    trigger: React.ReactNode;
+    icon: React.ComponentType<{ className?: string }>;
 }
 
-export function SortPopover<T extends string>({ options, value, onChange, trigger }: SortPopoverProps<T>) {
+export function SortPopover<T extends string>({ options, value, onChange, icon: Icon }: SortPopoverProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -107,7 +117,16 @@ export function SortPopover<T extends string>({ options, value, onChange, trigge
 
     return (
         <div ref={ref} className="relative">
-            <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={cx(
+                    "flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold transition duration-100 ease-linear",
+                    isOpen ? "bg-active text-secondary" : "text-tertiary hover:text-secondary hover:bg-primary_hover",
+                )}
+            >
+                <Icon className="size-4" />
+            </button>
             {isOpen && (
                 <div className="absolute right-0 z-50 mt-1 w-48 overflow-hidden rounded-lg bg-primary shadow-lg ring-1 ring-secondary_alt">
                     <div className="py-1">

@@ -10,7 +10,6 @@ import { ToastContainer } from "@/components/app/toast";
 import { WatchlistGrid } from "@/components/app/watchlist-grid";
 import { WatchlistList } from "@/components/app/watchlist-list";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
-import { Button } from "@/components/base/buttons/button";
 import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
 import type { OmdbSearchItem } from "@/lib/tmdb";
 import { toMediaType } from "@/lib/tmdb";
@@ -165,16 +164,16 @@ export function WatchlistPage() {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             filterTrigger={
-                <FilterPopover options={FILTER_OPTIONS} selected={filterKeys} onChange={setFilterKeys} trigger={
-                    <Button size="sm" color="tertiary" iconLeading={FilterLines}>
-                        {activeFilterCount > 0 ? `${activeFilterCount}` : ""}
-                    </Button>
-                } />
+                <FilterPopover
+                    options={FILTER_OPTIONS}
+                    selected={filterKeys}
+                    onChange={setFilterKeys}
+                    icon={FilterLines}
+                    label={activeFilterCount > 0 ? `${activeFilterCount}` : undefined}
+                />
             }
             sortTrigger={
-                <SortPopover options={SORT_OPTIONS} value={sort} onChange={setSort} trigger={
-                    <Button size="sm" color="tertiary" iconLeading={SwitchVertical01} />
-                } />
+                <SortPopover options={SORT_OPTIONS} value={sort} onChange={setSort} icon={SwitchVertical01} />
             }
         >
             <OfflineBanner />
