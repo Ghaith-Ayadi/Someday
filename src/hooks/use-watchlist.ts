@@ -56,10 +56,21 @@ export async function addToWatchlist(searchItem: OmdbSearchItem) {
     const mediaType = toMediaType(searchItem.Type);
     const id = buildId(mediaType, searchItem.imdbID);
 
-    // Fetch details for genre and plot (fast, single request)
+    // Fetch details for genre, plot, and rich metadata
     let genres: Genre[] = [];
     let overview = "";
     let rating = 0;
+    let director: string | undefined;
+    let actors: string | undefined;
+    let runtime: string | undefined;
+    let rated: string | undefined;
+    let writer: string | undefined;
+    let language: string | undefined;
+    let awards: string | undefined;
+    let metascore: string | undefined;
+    let imdbRating: string | undefined;
+    let rottenTomatoes: string | undefined;
+    let boxOffice: string | undefined;
 
     try {
         const detail = await getDetails(searchItem.imdbID);
@@ -67,6 +78,19 @@ export async function addToWatchlist(searchItem: OmdbSearchItem) {
             genres = parseGenres(detail.Genre);
             overview = detail.Plot !== "N/A" ? detail.Plot : "";
             rating = detail.imdbRating !== "N/A" ? parseFloat(detail.imdbRating) : 0;
+            const na = (v: string) => (v && v !== "N/A" ? v : undefined);
+            director = na(detail.Director);
+            actors = na(detail.Actors);
+            runtime = na(detail.Runtime);
+            rated = na(detail.Rated);
+            writer = na(detail.Writer);
+            language = na(detail.Language);
+            awards = na(detail.Awards);
+            metascore = na(detail.Metascore);
+            imdbRating = na(detail.imdbRating);
+            const rt = detail.Ratings?.find((r: { Source: string }) => r.Source === "Rotten Tomatoes");
+            rottenTomatoes = rt?.Value;
+            boxOffice = na(detail.BoxOffice);
         }
     } catch {
         // Silently fail — we still add with basic info
@@ -82,6 +106,17 @@ export async function addToWatchlist(searchItem: OmdbSearchItem) {
         releaseDate: searchItem.Year.slice(0, 4),
         voteAverage: rating,
         genres,
+        director,
+        actors,
+        runtime,
+        rated,
+        writer,
+        language,
+        awards,
+        metascore,
+        imdbRating,
+        rottenTomatoes,
+        boxOffice,
         status: "watchlist",
         addedAt: Date.now(),
     };

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Film01, FilterLines, LayoutGrid01, List, Moon01, SearchLg, Sun, SwitchVertical01 } from "@untitledui/icons";
+import { LayoutGrid01, List, Moon01, SearchLg, Sun } from "@untitledui/icons";
+import { ShortcutsHelp } from "@/components/app/shortcuts-help";
 import { Button } from "@/components/base/buttons/button";
 import { useTheme } from "@/providers/theme-provider";
 import { cx } from "@/utils/cx";
@@ -24,7 +25,7 @@ export function AppLayout({ children, onSearchOpen, filterTrigger, sortTrigger, 
             {/* Header */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-secondary px-4">
                 <div className="flex items-center gap-2">
-                    <Film01 className="size-5 text-fg-brand-primary" />
+                    <img src="/favicon.png" alt="Anderson" className="size-7 rounded-md" />
                     <h1 className="text-md font-semibold text-primary">Anderson</h1>
                 </div>
 
@@ -79,6 +80,9 @@ export function AppLayout({ children, onSearchOpen, filterTrigger, sortTrigger, 
 
                     {/* Divider */}
                     <div className="mx-0.5 h-5 w-px bg-border-secondary" />
+
+                    {/* Shortcuts help */}
+                    <ShortcutsHelp />
 
                     {/* Theme toggle */}
                     <Button

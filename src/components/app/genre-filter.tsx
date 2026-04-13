@@ -49,7 +49,7 @@ export function GenreFilter({ selected, onChange }: GenreFilterProps) {
                                 !isActive && "opacity-60 hover:opacity-100",
                             )}
                         >
-                            {genre}
+                            <span className="capitalize">{genre}</span>
                         </Badge>
                     </button>
                 );

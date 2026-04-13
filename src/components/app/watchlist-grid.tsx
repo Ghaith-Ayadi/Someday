@@ -1,6 +1,4 @@
-import { Film01 } from "@untitledui/icons";
 import { WatchlistCard } from "@/components/app/watchlist-card";
-import { EmptyState } from "@/components/application/empty-state/empty-state";
 import type { WatchlistItem } from "@/types/watchlist";
 
 interface WatchlistGridProps {
@@ -16,15 +14,11 @@ interface WatchlistGridProps {
 export function WatchlistGrid({ items, emptyTitle, emptyDescription, onMarkWatched, onMarkUnwatched, onRemove, onItemClick }: WatchlistGridProps) {
     if (items.length === 0) {
         return (
-            <EmptyState size="sm" className="py-16">
-                <EmptyState.Header pattern="none">
-                    <EmptyState.FeaturedIcon icon={Film01} color="gray" theme="light" />
-                </EmptyState.Header>
-                <EmptyState.Content>
-                    <EmptyState.Title>{emptyTitle}</EmptyState.Title>
-                    <EmptyState.Description>{emptyDescription}</EmptyState.Description>
-                </EmptyState.Content>
-            </EmptyState>
+            <div className="flex flex-col items-center justify-center py-20">
+                <img src="/favicon.png" alt="" className="mb-4 size-12 rounded-lg opacity-40" />
+                <h3 className="text-md font-semibold text-primary">{emptyTitle}</h3>
+                <p className="mt-1 text-sm text-tertiary">{emptyDescription}</p>
+            </div>
         );
     }
 

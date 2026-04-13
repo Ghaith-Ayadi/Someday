@@ -9,6 +9,11 @@ class WatchlistDB extends Dexie {
         this.version(1).stores({
             items: "id, imdbId, mediaType, status, addedAt, *genres",
         });
+        // v2: added rich metadata fields (director, actors, etc.)
+        // No index changes needed — Dexie handles new non-indexed fields automatically
+        this.version(2).stores({
+            items: "id, imdbId, mediaType, status, addedAt, *genres",
+        });
     }
 }
 

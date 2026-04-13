@@ -1,4 +1,4 @@
-import { Check, Eye, ReverseLeft, Trash01 } from "@untitledui/icons";
+import { Check, Clock, Eye, ReverseLeft, Star01, Trash01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { WatchlistItem } from "@/types/watchlist";
 import { GENRE_BADGE_COLORS } from "@/types/watchlist";
@@ -21,29 +21,71 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                     <div
                         key={item.id}
                         onClick={() => onItemClick(item)}
-                        className="group flex cursor-pointer items-center gap-3 py-2.5 transition duration-100 ease-linear hover:bg-primary_hover"
+                        className="group flex cursor-pointer gap-3 py-3 transition duration-100 ease-linear hover:bg-primary_hover"
                     >
-                        {/* Poster */}
-                        <div className="h-14 w-9 shrink-0 overflow-hidden rounded bg-tertiary">
+                        {/* Compact poster */}
+                        <div className="h-16 w-11 shrink-0 overflow-hidden rounded-md bg-tertiary">
                             {item.posterUrl ? (
                                 <img src={item.posterUrl} alt="" className="size-full object-cover" loading="lazy" />
                             ) : (
-                                <div className="flex size-full items-center justify-center text-[8px] text-quaternary">N/A</div>
+                                <div className="flex size-full items-center justify-center text-[7px] text-quaternary">N/A</div>
                             )}
                         </div>
 
-                        {/* Info */}
+                        {/* Content */}
                         <div className="flex min-w-0 flex-1 flex-col gap-1">
+                            {/* Title row */}
                             <div className="flex items-center gap-2">
-                                <span className={cx("truncate text-sm font-medium text-primary", isWatched && "text-tertiary")}>
+                                <span className={cx("truncate text-sm font-semibold text-primary", isWatched && "text-tertiary")}>
                                     {item.title}
                                 </span>
                                 {isWatched && <Check className="size-3.5 shrink-0 text-fg-success-primary" />}
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                {item.releaseDate && <span className="text-xs text-quaternary">{item.releaseDate}</span>}
+
+                            {/* Meta row: year, runtime, rating, rated */}
+                            <div className="flex items-center gap-2 text-xs text-quaternary">
+                                {item.releaseDate && <span>{item.releaseDate}</span>}
+                                {item.runtime && (
+                                    <>
+                                        <span className="text-border-tertiary">·</span>
+                                        <span className="flex items-center gap-0.5">
+                                            <Clock className="size-3" />
+                                            {item.runtime}
+                                        </span>
+                                    </>
+                                )}
+                                {item.imdbRating && (
+                                    <>
+                                        <span className="text-border-tertiary">·</span>
+                                        <span className="flex items-center gap-0.5">
+                                            <Star01 className="size-3 text-fg-warning-primary" />
+                                            {item.imdbRating}
+                                        </span>
+                                    </>
+                                )}
+                                {item.rated && item.rated !== "N/A" && (
+                                    <>
+                                        <span className="text-border-tertiary">·</span>
+                                        <span className="rounded border border-secondary px-1 py-px text-[10px] font-medium">{item.rated}</span>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Director & actors */}
+                            <div className="flex items-center gap-1 text-xs text-tertiary">
+                                {item.director && (
+                                    <span className="truncate">
+                                        <span className="text-quaternary">Dir.</span> {item.director}
+                                    </span>
+                                )}
+                                {item.director && item.actors && <span className="text-border-tertiary">·</span>}
+                                {item.actors && <span className="truncate">{item.actors}</span>}
+                            </div>
+
+                            {/* Genres */}
+                            <div className="flex items-center gap-1">
                                 {item.genres.slice(0, 3).map((genre) => (
-                                    <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]}>
+                                    <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
                                         {genre}
                                     </Badge>
                                 ))}
@@ -51,7 +93,7 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                         </div>
 
                         {/* Actions (visible on hover) */}
-                        <div className="flex shrink-0 items-center gap-1 opacity-0 transition duration-100 ease-linear group-hover:opacity-100">
+                        <div className="flex shrink-0 items-center gap-1 self-center opacity-0 transition duration-100 ease-linear group-hover:opacity-100">
                             {isWatched ? (
                                 <button
                                     type="button"

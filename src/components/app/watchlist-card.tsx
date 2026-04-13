@@ -45,14 +45,14 @@ export function WatchlistCard({ item, onMarkWatched, onMarkUnwatched, onRemove, 
             {/* Hover overlay */}
             <div
                 className={cx(
-                    "absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/80 via-black/40 to-transparent p-2.5 transition duration-150 ease-linear",
+                    "absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/80 via-black/40 to-transparent p-2.5 transition duration-100 ease-linear",
                     isHovered ? "opacity-100" : "opacity-0",
                 )}
             >
                 {/* Genre badges */}
                 <div className="mb-1.5 flex flex-wrap gap-1">
                     {item.genres.slice(0, 2).map((genre) => (
-                        <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]}>
+                        <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
                             {genre}
                         </Badge>
                     ))}

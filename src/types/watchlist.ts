@@ -28,6 +28,18 @@ export interface WatchlistItem {
     status: WatchStatus;
     addedAt: number;
     watchedAt?: number;
+    // Rich metadata from OMDb detail
+    director?: string;
+    actors?: string;
+    runtime?: string;
+    rated?: string;
+    writer?: string;
+    language?: string;
+    awards?: string;
+    metascore?: string;
+    imdbRating?: string;
+    rottenTomatoes?: string;
+    boxOffice?: string;
 }
 
 export const ALL_GENRES: Genre[] = [

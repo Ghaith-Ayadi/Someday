@@ -90,7 +90,7 @@ export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMark
                             {genres.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
                                     {genres.map((genre) => (
-                                        <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]}>
+                                        <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
                                             {genre}
                                         </Badge>
                                     ))}

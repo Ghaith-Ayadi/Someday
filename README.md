@@ -48,8 +48,8 @@ Named after Wes Anderson, obviously.
 ## Installation
 
 ```bash
-git clone https://github.com/Ghaith-Ayadi/watchlist.git
-cd watchlist
+git clone https://github.com/Ghaith-Ayadi/Anderson.git
+cd Anderson
 npm install
 ```
 

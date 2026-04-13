@@ -62,6 +62,7 @@ export function WatchlistPage() {
     const [filterKeys, setFilterKeys] = useState<Set<string>>(new Set());
     const [sort, setSort] = useState<SortOption>("name");
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
+    const [activeTab, setActiveTab] = useState<string>("movies");
 
     const genreFilter = useMemo(() => {
         const genres: Genre[] = [];
@@ -100,6 +101,10 @@ export function WatchlistPage() {
     );
 
     useHotkeys("mod+k", (e) => { e.preventDefault(); setIsSearchOpen(true); });
+    useHotkeys("1", () => { if (!isSearchOpen && !isDetailOpen) setActiveTab("movies"); });
+    useHotkeys("2", () => { if (!isSearchOpen && !isDetailOpen) setActiveTab("series"); });
+    useHotkeys("c", () => { if (!isSearchOpen && !isDetailOpen) setViewMode("grid"); });
+    useHotkeys("l", () => { if (!isSearchOpen && !isDetailOpen) setViewMode("list"); });
 
     const handleItemClick = useCallback((item: WatchlistItem) => {
         setDetailItem(item); setDetailSearchResult(null); setIsDetailOpen(true);
@@ -175,7 +180,7 @@ export function WatchlistPage() {
             <OfflineBanner />
 
             <div className="mx-auto w-full max-w-[800px] px-4 py-6">
-                <Tabs>
+                <Tabs selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
                     <TabList type="underline" size="md" fullWidth>
                         <Tab id="movies" badge={counts.movies}>Movies</Tab>
                         <Tab id="series" badge={counts.tv}>Series</Tab>
