@@ -181,7 +181,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
 
                             {/* Three columns: movies | series | preview */}
                             {hasResults && (
-                                <div className="flex max-h-[420px]">
+                                <div className="flex max-h-[480px]">
                                     {/* Movies column */}
                                     <div className="flex w-[30%] flex-col overflow-y-auto border-r border-secondary">
                                         <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
@@ -238,7 +238,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                     <div className="flex w-[40%] flex-col items-center justify-center p-5">
                                         {selectedItem ? (
                                             <div className="flex flex-col items-center gap-3 text-center">
-                                                <div className="h-56 w-38 overflow-hidden rounded-lg bg-tertiary shadow-md">
+                                                <div className="h-72 w-48 overflow-hidden rounded-lg bg-tertiary shadow-md">
                                                     {poster ? (
                                                         <img src={poster} alt={selectedItem.Title} className="size-full object-cover" />
                                                     ) : (
