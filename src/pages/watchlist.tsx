@@ -19,10 +19,12 @@ import { ALL_GENRES, buildId } from "@/types/watchlist";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 
-type SortOption = "name" | "year" | "genre" | "status";
+type SortOption = "added" | "name" | "year" | "genre" | "status";
+type SortDir = "asc" | "desc";
 
 const SORT_OPTIONS: { id: SortOption; label: string }[] = [
-    { id: "name", label: "Name (A→Z)" },
+    { id: "added", label: "Date added" },
+    { id: "name", label: "Name" },
     { id: "year", label: "Year" },
     { id: "genre", label: "Genre" },
     { id: "status", label: "Watch status" },
@@ -34,24 +36,36 @@ const FILTER_OPTIONS = [
     ...ALL_GENRES.map((g) => ({ id: `genre:${g}`, label: g, group: "Genre" })),
 ];
 
-function sortItems(items: WatchlistItem[], sort: SortOption): WatchlistItem[] {
+function sortItems(items: WatchlistItem[], sort: SortOption, dir: SortDir): WatchlistItem[] {
     const sorted = [...items];
+    const d = dir === "asc" ? 1 : -1;
     switch (sort) {
+        case "added":
+            return sorted.sort((a, b) => d * (a.addedAt - b.addedAt));
         case "name":
-            return sorted.sort((a, b) => a.title.localeCompare(b.title));
+            return sorted.sort((a, b) => d * a.title.localeCompare(b.title));
         case "year":
-            return sorted.sort((a, b) => (b.releaseDate || "").localeCompare(a.releaseDate || ""));
+            return sorted.sort((a, b) => d * (a.releaseDate || "").localeCompare(b.releaseDate || ""));
         case "genre":
-            return sorted.sort((a, b) => (a.genres[0] || "").localeCompare(b.genres[0] || ""));
+            return sorted.sort((a, b) => d * (a.genres[0] || "").localeCompare(b.genres[0] || ""));
         case "status":
             return sorted.sort((a, b) => {
-                if (a.status === b.status) return a.title.localeCompare(b.title);
-                return a.status === "watchlist" ? -1 : 1;
+                if (a.status === b.status) return d * a.title.localeCompare(b.title);
+                return d * (a.status === "watchlist" ? -1 : 1);
             });
         default:
             return sorted;
     }
 }
+
+/** Default direction for each sort option */
+const DEFAULT_DIR: Record<SortOption, SortDir> = {
+    added: "desc",
+    name: "asc",
+    year: "desc",
+    genre: "asc",
+    status: "asc",
+};
 
 export function WatchlistPage() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -59,7 +73,18 @@ export function WatchlistPage() {
     const [detailSearchResult, setDetailSearchResult] = useState<OmdbSearchItem | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [filterKeys, setFilterKeys] = useState<Set<string>>(new Set());
-    const [sort, setSort] = useState<SortOption>("name");
+    const [sort, setSort] = useState<SortOption>("added");
+    const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+    const handleSortChange = useCallback((newSort: SortOption) => {
+        if (newSort === sort) {
+            // Toggle direction
+            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        } else {
+            setSort(newSort);
+            setSortDir(DEFAULT_DIR[newSort]);
+        }
+    }, [sort]);
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [activeTab, setActiveTab] = useState<string>("movies");
 
@@ -83,14 +108,14 @@ export function WatchlistPage() {
     const filteredMovies = useMemo(() => {
         let items = movieItems;
         if (statusFilter.length > 0) items = items.filter((i) => statusFilter.includes(i.status));
-        return sortItems(items, sort);
-    }, [movieItems, statusFilter, sort]);
+        return sortItems(items, sort, sortDir);
+    }, [movieItems, statusFilter, sort, sortDir]);
 
     const filteredTv = useMemo(() => {
         let items = tvItems;
         if (statusFilter.length > 0) items = items.filter((i) => statusFilter.includes(i.status));
-        return sortItems(items, sort);
-    }, [tvItems, statusFilter, sort]);
+        return sortItems(items, sort, sortDir);
+    }, [tvItems, statusFilter, sort, sortDir]);
 
     const detailImdbId = detailSearchResult?.imdbID;
     const detailMediaType = detailSearchResult ? toMediaType(detailSearchResult.Type) : "movie";
@@ -173,7 +198,7 @@ export function WatchlistPage() {
                 />
             }
             sortTrigger={
-                <SortPopover options={SORT_OPTIONS} value={sort} onChange={setSort} icon={SwitchVertical01} />
+                <SortPopover options={SORT_OPTIONS} value={sort} direction={sortDir} onChange={handleSortChange} icon={SwitchVertical01} />
             }
         >
             <OfflineBanner />

@@ -98,11 +98,12 @@ export function FilterPopover({ options, selected, onChange, icon: Icon, label }
 interface SortPopoverProps<T extends string> {
     options: { id: T; label: string }[];
     value: T;
+    direction: "asc" | "desc";
     onChange: (value: T) => void;
     icon: React.ComponentType<{ className?: string }>;
 }
 
-export function SortPopover<T extends string>({ options, value, onChange, icon: Icon }: SortPopoverProps<T>) {
+export function SortPopover<T extends string>({ options, value, direction, onChange, icon: Icon }: SortPopoverProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -130,26 +131,34 @@ export function SortPopover<T extends string>({ options, value, onChange, icon: 
             {isOpen && (
                 <div className="absolute right-0 z-50 mt-1 w-48 overflow-hidden rounded-lg bg-primary shadow-lg ring-1 ring-secondary_alt">
                     <div className="py-1">
-                        {options.map((opt) => (
-                            <button
-                                key={opt.id}
-                                type="button"
-                                onClick={() => {
-                                    onChange(opt.id);
-                                    setIsOpen(false);
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-2 px-3.5 py-1.5 text-left text-sm font-medium text-secondary transition duration-100 ease-linear hover:bg-primary_hover"
-                            >
-                                <Check
-                                    className={cx(
-                                        "size-4 shrink-0 text-fg-brand-primary",
-                                        value !== opt.id && "invisible",
+                        {options.map((opt) => {
+                            const isActive = value === opt.id;
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => {
+                                        onChange(opt.id);
+                                        if (!isActive) setIsOpen(false);
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2 px-3.5 py-1.5 text-left text-sm font-medium text-secondary transition duration-100 ease-linear hover:bg-primary_hover"
+                                >
+                                    <Check
+                                        className={cx(
+                                            "size-4 shrink-0 text-fg-brand-primary",
+                                            !isActive && "invisible",
+                                        )}
+                                        strokeWidth={2.5}
+                                    />
+                                    <span className="flex-1">{opt.label}</span>
+                                    {isActive && (
+                                        <span className="text-xs text-quaternary">
+                                            {direction === "asc" ? "↑" : "↓"}
+                                        </span>
                                     )}
-                                    strokeWidth={2.5}
-                                />
-                                <span>{opt.label}</span>
-                            </button>
-                        ))}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
