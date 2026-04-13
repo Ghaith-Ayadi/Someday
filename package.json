@@ -13,6 +13,8 @@
         "@tailwindcss/vite": "^4.2.2",
         "@untitledui/file-icons": "^0.0.9",
         "@untitledui/icons": "^0.0.22",
+        "dexie": "^4.4.2",
+        "dexie-react-hooks": "^4.4.0",
         "input-otp": "^1.4.2",
         "motion": "^12.38.0",
         "qr-code-styling": "^1.9.2",
