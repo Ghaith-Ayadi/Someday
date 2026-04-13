@@ -25,7 +25,7 @@ export function AppLayout({ children, onSearchOpen, filterTrigger, sortTrigger, 
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-secondary px-4">
                 <div className="flex items-center gap-2">
                     <Film01 className="size-5 text-fg-brand-primary" />
-                    <h1 className="text-md font-semibold text-primary">Watchlist</h1>
+                    <h1 className="text-md font-semibold text-primary">Anderson</h1>
                 </div>
 
                 <div className="flex items-center gap-1.5">

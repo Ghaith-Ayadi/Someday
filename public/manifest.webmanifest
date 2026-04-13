@@ -1,11 +1,11 @@
 {
-  "name": "Watchlist",
-  "short_name": "Watchlist",
-  "description": "Personal movie and series tracker",
+  "name": "Anderson",
+  "short_name": "Anderson",
+  "description": "Keeping track of what to watch.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2E90FA",
+  "theme_color": "#8B1A1A",
   "icons": [
     {
       "src": "/icons/icon-192.png",

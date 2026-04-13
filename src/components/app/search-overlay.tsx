@@ -81,7 +81,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
     const handleAdd = useCallback(
         async (result: OmdbSearchItem) => {
             await addToWatchlist(result);
-            addToast(`Added "${result.Title}" to watchlist`);
+            addToast(`Added "${result.Title}" to list`);
         },
         [addToast],
     );
@@ -247,11 +247,11 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                                         className="mt-1 flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-solid px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition duration-100 ease-linear hover:bg-brand-solid_hover"
                                                     >
                                                         <Plus className="size-3.5" />
-                                                        Add to Watchlist
+                                                        Add
                                                     </button>
                                                 ) : (
                                                     <span className="mt-1 text-xs font-medium text-fg-success-primary">
-                                                        Already in watchlist
+                                                        Added
                                                     </span>
                                                 )}
                                             </div>

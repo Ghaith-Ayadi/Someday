@@ -114,7 +114,7 @@ export function WatchlistPage() {
     const handleDetailAdd = useCallback(async () => {
         if (detailSearchResult) {
             await addToWatchlist(detailSearchResult);
-            addToast(`Added "${detailSearchResult.Title}" to watchlist`);
+            addToast(`Added "${detailSearchResult.Title}" to list`);
             handleCloseDetail();
         }
     }, [detailSearchResult, addToast, handleCloseDetail]);
@@ -128,12 +128,12 @@ export function WatchlistPage() {
         if (activeDetailItem) { await markAsUnwatched(activeDetailItem.id); addToast(`Marked "${activeDetailItem.title}" as unwatched`); handleCloseDetail(); }
     }, [activeDetailItem, addToast, handleCloseDetail]);
     const handleDetailRemove = useCallback(async () => {
-        if (activeDetailItem) { await removeFromWatchlist(activeDetailItem.id); addToast(`Removed "${activeDetailItem.title}" from watchlist`); handleCloseDetail(); }
+        if (activeDetailItem) { await removeFromWatchlist(activeDetailItem.id); addToast(`Removed "${activeDetailItem.title}" `); handleCloseDetail(); }
     }, [activeDetailItem, addToast, handleCloseDetail]);
 
     const handleMarkWatched = useCallback(async (id: string, title: string) => { await markAsWatched(id); addToast(`Marked "${title}" as watched`); }, [addToast]);
     const handleMarkUnwatched = useCallback(async (id: string, title: string) => { await markAsUnwatched(id); addToast(`Marked "${title}" as unwatched`); }, [addToast]);
-    const handleRemove = useCallback(async (id: string, title: string) => { await removeFromWatchlist(id); addToast(`Removed "${title}" from watchlist`); }, [addToast]);
+    const handleRemove = useCallback(async (id: string, title: string) => { await removeFromWatchlist(id); addToast(`Removed "${title}" `); }, [addToast]);
 
     const activeFilterCount = filterKeys.size;
 

@@ -118,7 +118,7 @@ export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMark
                                     </>
                                 ) : (
                                     <Button size="sm" color="primary" iconLeading={Plus} onClick={onAdd}>
-                                        Add to Watchlist
+                                        Add
                                     </Button>
                                 )}
                             </div>
