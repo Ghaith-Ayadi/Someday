@@ -182,9 +182,52 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                             )}
                             {noResults && <div className="px-3 py-16 text-center text-sm text-tertiary">No results found</div>}
 
-                            {/* Three columns: movies | series | preview */}
+                            {/* Responsive: single scrollable list on mobile, 3-column on desktop */}
                             {hasResults && (
-                                <div className="flex max-h-[560px]">
+                                <>
+                                {/* Mobile: single column */}
+                                <div className="max-h-[70vh] overflow-y-auto sm:hidden">
+                                    <div className="p-1.5">
+                                        {movies.length > 0 && (
+                                            <div className="px-2 pt-1.5 pb-1 text-xs font-semibold text-tertiary">Movies ({movies.length})</div>
+                                        )}
+                                        {movies.map((result, i) => (
+                                            <div key={result.imdbID} data-col="movie" data-idx={i}>
+                                                <SearchResultItem
+                                                    result={result}
+                                                    isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
+                                                    watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
+                                                    isSelected={activeColumn === "movies" && i === movieIndex}
+                                                    onAdd={() => handleAdd(result)}
+                                                    onClick={() => onSelectItem(result)}
+                                                    onHover={() => { setActiveColumn("movies"); setMovieIndex(i); }}
+                                                />
+                                            </div>
+                                        ))}
+                                        {series.length > 0 && (
+                                            <>
+                                                <div className="my-1 h-px bg-border-secondary" />
+                                                <div className="px-2 pt-1.5 pb-1 text-xs font-semibold text-tertiary">Series ({series.length})</div>
+                                            </>
+                                        )}
+                                        {series.map((result, i) => (
+                                            <div key={result.imdbID} data-col="series" data-idx={i}>
+                                                <SearchResultItem
+                                                    result={result}
+                                                    isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
+                                                    watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
+                                                    isSelected={activeColumn === "series" && i === seriesIndex}
+                                                    onAdd={() => handleAdd(result)}
+                                                    onClick={() => onSelectItem(result)}
+                                                    onHover={() => { setActiveColumn("series"); setSeriesIndex(i); }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Desktop: 3-column */}
+                                <div className="hidden max-h-[560px] sm:flex">
                                     {/* Movies column */}
                                     <div className="flex w-[30%] flex-col overflow-y-auto border-r border-secondary">
                                         <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
@@ -281,6 +324,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                         )}
                                     </div>
                                 </div>
+                                </>
                             )}
                         </div>
                     </motion.div>

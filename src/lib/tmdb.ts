@@ -1,7 +1,8 @@
 import type { MediaType } from "@/types/watchlist";
 
 const OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY as string;
-const OMDB_BASE = "https://www.omdbapi.com";
+// Use proxy in dev to avoid CORS issues on mobile/network access
+const OMDB_BASE = import.meta.env.DEV ? "/omdb" : "https://www.omdbapi.com";
 
 export interface OmdbSearchItem {
     Title: string;

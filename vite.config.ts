@@ -10,4 +10,13 @@ export default defineConfig({
             "@": path.resolve(__dirname, "./src"),
         },
     },
+    server: {
+        proxy: {
+            "/omdb": {
+                target: "https://www.omdbapi.com",
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/omdb/, "/"),
+            },
+        },
+    },
 });
