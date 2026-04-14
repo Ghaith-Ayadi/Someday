@@ -206,7 +206,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-secondary bg-primary shadow-xl"
+                        className="flex w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-secondary bg-primary shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Search input */}
@@ -249,35 +249,81 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                             )}
                             {noResults && <div className="px-3 py-16 text-center text-sm text-tertiary">No results found</div>}
 
-                            {/* Two-column results: movies | series */}
+                            {/* Results + Preview: 2-col on mobile, 3-col on desktop */}
                             {hasResults && (
                                 <div className="flex max-h-[70vh] sm:max-h-[560px]">
-                                    {/* Movies */}
-                                    <div className="flex flex-1 flex-col overflow-y-auto border-r border-secondary">
-                                        <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
-                                            Movies ({movies.length})
+                                    {/* Results columns */}
+                                    <div className="flex w-full flex-col overflow-y-auto sm:w-[60%] sm:flex-row">
+                                        {/* Movies */}
+                                        <div className="flex flex-1 flex-col border-b border-secondary sm:border-r sm:border-b-0">
+                                            <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
+                                                Movies ({movies.length})
+                                            </div>
+                                            <div className="p-1">
+                                                {movies.length === 0 ? (
+                                                    <div className="py-6 text-center text-xs text-quaternary">No movies</div>
+                                                ) : (
+                                                    movies.map((r, i) => renderResultItem(r, "movies", i))
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="p-1">
-                                            {movies.length === 0 ? (
-                                                <div className="py-6 text-center text-xs text-quaternary">No movies</div>
-                                            ) : (
-                                                movies.map((r, i) => renderResultItem(r, "movies", i))
-                                            )}
+
+                                        {/* Series */}
+                                        <div className="flex flex-1 flex-col">
+                                            <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
+                                                Series ({series.length})
+                                            </div>
+                                            <div className="p-1">
+                                                {series.length === 0 ? (
+                                                    <div className="py-6 text-center text-xs text-quaternary">No series</div>
+                                                ) : (
+                                                    series.map((r, i) => renderResultItem(r, "series", i))
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Series */}
-                                    <div className="flex flex-1 flex-col overflow-y-auto">
-                                        <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
-                                            Series ({series.length})
-                                        </div>
-                                        <div className="p-1">
-                                            {series.length === 0 ? (
-                                                <div className="py-6 text-center text-xs text-quaternary">No series</div>
-                                            ) : (
-                                                series.map((r, i) => renderResultItem(r, "series", i))
-                                            )}
-                                        </div>
+                                    {/* Preview pane */}
+                                    <div className="hidden w-[40%] flex-col items-center justify-center border-l border-secondary p-5 sm:flex">
+                                        {previewItem ? (
+                                            <div className="flex flex-col items-center gap-3 text-center">
+                                                <div className="h-[450px] w-[300px] overflow-hidden rounded-lg bg-tertiary shadow-md">
+                                                    {poster ? (
+                                                        <img src={poster} alt={previewItem.title || previewItem.name || ""} className="size-full object-cover" />
+                                                    ) : (
+                                                        <div className="flex size-full items-center justify-center text-xs text-quaternary">No poster</div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <h3 className="text-sm font-semibold text-primary">{previewItem.title || previewItem.name || "Unknown"}</h3>
+                                                    <span className="text-xs text-tertiary">
+                                                        {(previewItem.release_date || previewItem.first_air_date || "").slice(0, 4)} · {previewItem.media_type === "movie" ? "Movie" : "Series"}
+                                                    </span>
+                                                </div>
+                                                {/* Action buttons */}
+                                                {!isPreviewInWatchlist ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => previewItem && handleAdd(previewItem)}
+                                                        className="mt-1 flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-solid px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition duration-100 ease-linear hover:bg-brand-solid_hover"
+                                                    >
+                                                        <Plus className="size-3.5" />
+                                                        Add
+                                                    </button>
+                                                ) : (
+                                                    <span className={cx(
+                                                        "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                                                        previewStatus === "watched"
+                                                            ? "bg-success-secondary text-fg-success-primary"
+                                                            : "bg-brand-secondary text-fg-brand-primary",
+                                                    )}>
+                                                        {previewStatus === "watched" ? "Watched" : "To watch"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-quaternary">Select an item to preview</div>
+                                        )}
                                     </div>
                                 </div>
                             )}
