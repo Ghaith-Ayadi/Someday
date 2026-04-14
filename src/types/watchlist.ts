@@ -69,34 +69,29 @@ export const GENRE_BADGE_COLORS: Record<Genre, BadgeColors> = {
 };
 
 /** Build a composite ID for a watchlist item */
-export function buildId(mediaType: MediaType, imdbId: string): string {
-    return `${mediaType}-${imdbId}`;
+export function buildId(mediaType: MediaType, tmdbId: string | number): string {
+    return `${mediaType}-${tmdbId}`;
 }
 
-/** Parse OMDb genre string into our Genre array */
-export function parseGenres(genreString: string): Genre[] {
-    if (!genreString || genreString === "N/A") return [];
-    const genreMap: Record<string, Genre> = {
-        action: "action",
-        adventure: "action",
-        comedy: "comedy",
-        drama: "drama",
-        thriller: "thriller",
-        crime: "thriller",
-        mystery: "thriller",
-        horror: "horror",
-        "sci-fi": "sci-fi",
-        "science fiction": "sci-fi",
-        romance: "romance",
-        animation: "animation",
-        documentary: "documentary",
-        fantasy: "fantasy",
-    };
-    const genres = new Set<Genre>();
-    for (const raw of genreString.split(",")) {
-        const normalized = raw.trim().toLowerCase();
-        const mapped = genreMap[normalized];
-        if (mapped) genres.add(mapped);
-    }
-    return Array.from(genres);
-}
+/** Maps TMDB genre IDs to our genre categories */
+export const TMDB_GENRE_MAP: Record<number, Genre> = {
+    // Movie genres
+    28: "action",
+    12: "action",
+    35: "comedy",
+    18: "drama",
+    27: "horror",
+    878: "sci-fi",
+    10749: "romance",
+    16: "animation",
+    99: "documentary",
+    14: "fantasy",
+    53: "thriller",
+    80: "thriller",
+    9648: "thriller",
+    // TV genres
+    10759: "action",
+    10765: "sci-fi",
+    10766: "drama",
+    10768: "action",
+};

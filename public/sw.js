@@ -27,7 +27,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
   // Cache TMDB images with CacheFirst strategy
-  if (url.hostname === "m.media-amazon.com") {
+  if (url.hostname === "image.tmdb.org") {
     event.respondWith(
       caches.open(TMDB_IMAGE_CACHE).then((cache) =>
         cache.match(event.request).then(
@@ -44,7 +44,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // NetworkFirst for TMDB API
-  if (url.hostname === "www.omdbapi.com") {
+  if (url.hostname === "api.themoviedb.org") {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

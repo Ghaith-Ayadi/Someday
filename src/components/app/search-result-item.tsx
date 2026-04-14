@@ -1,11 +1,11 @@
 import { Check, Eye, Plus } from "@untitledui/icons";
-import type { OmdbSearchItem } from "@/lib/tmdb";
+import type { TmdbSearchResult } from "@/lib/tmdb";
 import { posterUrl } from "@/lib/tmdb";
 import type { WatchStatus } from "@/types/watchlist";
 import { cx } from "@/utils/cx";
 
 interface SearchResultItemProps {
-    result: OmdbSearchItem;
+    result: TmdbSearchResult;
     isInWatchlist: boolean;
     watchStatus?: WatchStatus;
     isSelected: boolean;
@@ -16,8 +16,9 @@ interface SearchResultItemProps {
 }
 
 export function SearchResultItem({ result, isInWatchlist, watchStatus, isSelected, onAdd, onClick, onHover, compact }: SearchResultItemProps) {
-    const poster = posterUrl(result.Poster);
-    const year = result.Year.slice(0, 4);
+    const poster = posterUrl(result.poster_path, "w154");
+    const title = result.title || result.name || "Unknown";
+    const year = (result.release_date || result.first_air_date || "").slice(0, 4);
 
     return (
         <div
@@ -44,8 +45,7 @@ export function SearchResultItem({ result, isInWatchlist, watchStatus, isSelecte
             {/* Info */}
             <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-medium text-primary">{result.Title}</span>
-                    {/* Status marker */}
+                    <span className="truncate text-sm font-medium text-primary">{title}</span>
                     {watchStatus === "watched" && (
                         <Check className="size-3 shrink-0 text-fg-success-primary" strokeWidth={3} />
                     )}

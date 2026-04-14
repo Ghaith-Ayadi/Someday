@@ -1,9 +1,9 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import type { OmdbDetail, OmdbSearchItem } from "@/lib/tmdb";
-import { getDetails, posterUrl, toMediaType } from "@/lib/tmdb";
+import type { TmdbSearchResult } from "@/lib/tmdb";
+import { extractCast, extractDirector, extractRating, extractRuntime, getDetails, posterUrl, toMediaType } from "@/lib/tmdb";
 import { db } from "@/lib/db";
 import type { Genre, MediaType, WatchlistItem, WatchStatus } from "@/types/watchlist";
-import { buildId, parseGenres } from "@/types/watchlist";
+import { buildId, TMDB_GENRE_MAP } from "@/types/watchlist";
 
 /** Reactive query for watchlist items, filtered by media type and optionally by genres */
 export function useWatchlistItems(mediaType: MediaType, genreFilter?: Genre[]) {
@@ -33,7 +33,6 @@ export function useFilterCounts() {
             const items = await db.items.toArray();
             const counts = new Map<string, { movies: number; series: number }>();
 
-            // Status counts
             for (const status of ["watchlist", "watched"] as WatchStatus[]) {
                 const key = `status:${status}`;
                 counts.set(key, {
@@ -42,7 +41,6 @@ export function useFilterCounts() {
                 });
             }
 
-            // Genre counts
             const allGenres: Genre[] = ["action", "comedy", "drama", "thriller", "horror", "sci-fi", "romance", "animation", "documentary", "fantasy"];
             for (const genre of allGenres) {
                 const key = `genre:${genre}`;
@@ -98,75 +96,55 @@ export function useWatchlistCounts() {
     );
 }
 
-/** Add an OMDb search result to the watchlist. Fetches details for genre/plot info. */
-export async function addToWatchlist(searchItem: OmdbSearchItem) {
-    const mediaType = toMediaType(searchItem.Type);
-    const id = buildId(mediaType, searchItem.imdbID);
-
-    // Fetch details for genre, plot, and rich metadata
-    let genres: Genre[] = [];
-    let overview = "";
-    let rating = 0;
-    let director: string | undefined;
-    let actors: string | undefined;
-    let runtime: string | undefined;
-    let rated: string | undefined;
-    let writer: string | undefined;
-    let language: string | undefined;
-    let awards: string | undefined;
-    let metascore: string | undefined;
-    let imdbRating: string | undefined;
-    let rottenTomatoes: string | undefined;
-    let boxOffice: string | undefined;
-
-    try {
-        const detail = await getDetails(searchItem.imdbID);
-        if (detail) {
-            genres = parseGenres(detail.Genre);
-            overview = detail.Plot !== "N/A" ? detail.Plot : "";
-            rating = detail.imdbRating !== "N/A" ? parseFloat(detail.imdbRating) : 0;
-            const na = (v: string) => (v && v !== "N/A" ? v : undefined);
-            director = na(detail.Director);
-            actors = na(detail.Actors);
-            runtime = na(detail.Runtime);
-            rated = na(detail.Rated);
-            writer = na(detail.Writer);
-            language = na(detail.Language);
-            awards = na(detail.Awards);
-            metascore = na(detail.Metascore);
-            imdbRating = na(detail.imdbRating);
-            const rt = detail.Ratings?.find((r: { Source: string }) => r.Source === "Rotten Tomatoes");
-            rottenTomatoes = rt?.Value;
-            boxOffice = na(detail.BoxOffice);
-        }
-    } catch {
-        // Silently fail — we still add with basic info
+/** Map TMDB genre IDs to our genre categories */
+function mapGenres(genreIds: number[]): Genre[] {
+    const genres = new Set<Genre>();
+    for (const id of genreIds) {
+        const genre = TMDB_GENRE_MAP[id];
+        if (genre) genres.add(genre);
     }
+    return Array.from(genres);
+}
 
+/** Add a TMDB search result to the watchlist. Fetches details for rich metadata. */
+export async function addToWatchlist(result: TmdbSearchResult) {
+    const mediaType = toMediaType(result.media_type as "movie" | "tv");
+    const id = buildId(mediaType, String(result.id));
+
+    // Basic info from search result
     const item: WatchlistItem = {
         id,
-        imdbId: searchItem.imdbID,
+        imdbId: String(result.id), // using tmdb ID
         mediaType,
-        title: searchItem.Title,
-        posterUrl: posterUrl(searchItem.Poster),
-        overview,
-        releaseDate: searchItem.Year.slice(0, 4),
-        voteAverage: rating,
-        genres,
-        director,
-        actors,
-        runtime,
-        rated,
-        writer,
-        language,
-        awards,
-        metascore,
-        imdbRating,
-        rottenTomatoes,
-        boxOffice,
+        title: result.title || result.name || "Unknown",
+        posterUrl: posterUrl(result.poster_path),
+        overview: result.overview,
+        releaseDate: (result.release_date || result.first_air_date || "").slice(0, 4),
+        voteAverage: result.vote_average,
+        genres: mapGenres(result.genre_ids),
         status: "watchlist",
         addedAt: Date.now(),
     };
+
+    // Fetch detail for rich metadata
+    try {
+        const detail = await getDetails(mediaType, result.id);
+        if (detail) {
+            item.director = extractDirector(detail);
+            item.actors = extractCast(detail);
+            item.runtime = extractRuntime(detail);
+            item.rated = extractRating(detail, mediaType);
+            item.imdbRating = detail.vote_average ? String(detail.vote_average.toFixed(1)) : undefined;
+            if (detail.overview) item.overview = detail.overview;
+            // Use detail genres (full names) if available
+            if (detail.genres.length > 0) {
+                item.genres = mapGenres(detail.genres.map((g) => g.id));
+            }
+        }
+    } catch {
+        // Silently fail — we still add with basic info from search
+    }
+
     await db.items.put(item);
     return item;
 }

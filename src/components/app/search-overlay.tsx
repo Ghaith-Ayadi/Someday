@@ -6,7 +6,7 @@ import { SearchResultItem } from "@/components/app/search-result-item";
 import { Badge } from "@/components/base/badges/badges";
 import { useMovieSearch } from "@/hooks/use-tmdb-search";
 import { addToWatchlist, useWatchlistIds, useWatchlistStatusMap } from "@/hooks/use-watchlist";
-import type { OmdbSearchItem } from "@/lib/tmdb";
+import type { TmdbSearchResult } from "@/lib/tmdb";
 import { posterUrl, toMediaType } from "@/lib/tmdb";
 import { useToast } from "@/providers/toast-provider";
 import { buildId } from "@/types/watchlist";
@@ -15,7 +15,7 @@ import { cx } from "@/utils/cx";
 interface SearchOverlayProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelectItem: (result: OmdbSearchItem) => void;
+    onSelectItem: (result: TmdbSearchResult) => void;
 }
 
 type Column = "movies" | "series";
@@ -31,8 +31,8 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
-    const movies = useMemo(() => results.filter((r) => r.Type === "movie"), [results]);
-    const series = useMemo(() => results.filter((r) => r.Type === "series"), [results]);
+    const movies = useMemo(() => results.filter((r) => r.media_type === "movie"), [results]);
+    const series = useMemo(() => results.filter((r) => r.media_type === "tv"), [results]);
 
     // The currently selected item based on active column
     const selectedItem = useMemo(() => {
@@ -80,7 +80,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                 }
             } else if (e.key === "Enter" && selectedItem) {
                 e.preventDefault();
-                const id = buildId(toMediaType(selectedItem.Type), selectedItem.imdbID);
+                const id = buildId(toMediaType(selectedItem.media_type), selectedItem.id);
                 if (watchlistIds.has(id)) {
                     onSelectItem(selectedItem);
                 } else {
@@ -105,9 +105,9 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
     }, [activeColumn, movieIndex, seriesIndex]);
 
     const handleAdd = useCallback(
-        async (result: OmdbSearchItem) => {
+        async (result: TmdbSearchResult) => {
             await addToWatchlist(result);
-            addToast(`Added "${result.Title}" to list`);
+            addToast(`Added "${(result.title || result.name)}" to list`);
         },
         [addToast],
     );
@@ -118,9 +118,9 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
 
     const hasResults = !isLoading && (movies.length > 0 || series.length > 0);
     const noResults = !isLoading && !error && query.length >= 2 && movies.length === 0 && series.length === 0;
-    const poster = selectedItem ? posterUrl(selectedItem.Poster) : null;
-    const isSelectedInWatchlist = selectedItem ? watchlistIds.has(buildId(toMediaType(selectedItem.Type), selectedItem.imdbID)) : false;
-    const selectedStatus = selectedItem ? watchlistStatus.get(buildId(toMediaType(selectedItem.Type), selectedItem.imdbID)) : undefined;
+    const poster = selectedItem ? posterUrl(selectedItem.poster_path) : null;
+    const isSelectedInWatchlist = selectedItem ? watchlistIds.has(buildId(toMediaType(selectedItem.media_type), selectedItem.id)) : false;
+    const selectedStatus = selectedItem ? watchlistStatus.get(buildId(toMediaType(selectedItem.media_type), selectedItem.id)) : undefined;
 
     return (
         <AnimatePresence>
@@ -192,11 +192,11 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                             <div className="px-2 pt-1.5 pb-1 text-xs font-semibold text-tertiary">Movies ({movies.length})</div>
                                         )}
                                         {movies.map((result, i) => (
-                                            <div key={result.imdbID} data-col="movie" data-idx={i}>
+                                            <div key={result.id} data-col="movie" data-idx={i}>
                                                 <SearchResultItem
                                                     result={result}
-                                                    isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
-                                                    watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
+                                                    isInWatchlist={watchlistIds.has(buildId(toMediaType(result.media_type), result.id))}
+                                                    watchStatus={watchlistStatus.get(buildId(toMediaType(result.media_type), result.id))}
                                                     isSelected={activeColumn === "movies" && i === movieIndex}
                                                     onAdd={() => handleAdd(result)}
                                                     onClick={() => onSelectItem(result)}
@@ -211,11 +211,11 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                             </>
                                         )}
                                         {series.map((result, i) => (
-                                            <div key={result.imdbID} data-col="series" data-idx={i}>
+                                            <div key={result.id} data-col="series" data-idx={i}>
                                                 <SearchResultItem
                                                     result={result}
-                                                    isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
-                                                    watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
+                                                    isInWatchlist={watchlistIds.has(buildId(toMediaType(result.media_type), result.id))}
+                                                    watchStatus={watchlistStatus.get(buildId(toMediaType(result.media_type), result.id))}
                                                     isSelected={activeColumn === "series" && i === seriesIndex}
                                                     onAdd={() => handleAdd(result)}
                                                     onClick={() => onSelectItem(result)}
@@ -238,11 +238,11 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                                 <div className="py-8 text-center text-xs text-quaternary">No movies</div>
                                             ) : (
                                                 movies.map((result, i) => (
-                                                    <div key={result.imdbID} data-col="movie" data-idx={i}>
+                                                    <div key={result.id} data-col="movie" data-idx={i}>
                                                         <SearchResultItem
                                                             result={result}
-                                                            isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
-                                                            watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
+                                                            isInWatchlist={watchlistIds.has(buildId(toMediaType(result.media_type), result.id))}
+                                                            watchStatus={watchlistStatus.get(buildId(toMediaType(result.media_type), result.id))}
                                                             isSelected={activeColumn === "movies" && i === movieIndex}
                                                             onAdd={() => handleAdd(result)}
                                                             onClick={() => onSelectItem(result)}
@@ -265,11 +265,11 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                                 <div className="py-8 text-center text-xs text-quaternary">No series</div>
                                             ) : (
                                                 series.map((result, i) => (
-                                                    <div key={result.imdbID} data-col="series" data-idx={i}>
+                                                    <div key={result.id} data-col="series" data-idx={i}>
                                                         <SearchResultItem
                                                             result={result}
-                                                            isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
-                                                            watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
+                                                            isInWatchlist={watchlistIds.has(buildId(toMediaType(result.media_type), result.id))}
+                                                            watchStatus={watchlistStatus.get(buildId(toMediaType(result.media_type), result.id))}
                                                             isSelected={activeColumn === "series" && i === seriesIndex}
                                                             onAdd={() => handleAdd(result)}
                                                             onClick={() => onSelectItem(result)}
@@ -288,15 +288,15 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                             <div className="flex flex-col items-center gap-3 text-center">
                                                 <div className="h-[450px] w-[300px] overflow-hidden rounded-lg bg-tertiary shadow-md">
                                                     {poster ? (
-                                                        <img src={poster} alt={selectedItem.Title} className="size-full object-cover" />
+                                                        <img src={poster} alt={(selectedItem.title || selectedItem.name || "Unknown")} className="size-full object-cover" />
                                                     ) : (
                                                         <div className="flex size-full items-center justify-center text-xs text-quaternary">No poster</div>
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <h3 className="text-sm font-semibold text-primary">{selectedItem.Title}</h3>
+                                                    <h3 className="text-sm font-semibold text-primary">{(selectedItem.title || selectedItem.name || "Unknown")}</h3>
                                                     <span className="text-xs text-tertiary">
-                                                        {selectedItem.Year} · {selectedItem.Type === "movie" ? "Movie" : "Series"}
+                                                        {(selectedItem.release_date || selectedItem.first_air_date || "").slice(0, 4)} · {selectedItem.media_type === "movie" ? "Movie" : "Series"}
                                                     </span>
                                                 </div>
                                                 {!isSelectedInWatchlist ? (

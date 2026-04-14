@@ -2,14 +2,14 @@ import { Eye, Plus, ReverseLeft, Star01, Trash01, XClose } from "@untitledui/ico
 import { AnimatePresence, motion } from "motion/react";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
-import type { OmdbSearchItem } from "@/lib/tmdb";
+import type { TmdbSearchResult } from "@/lib/tmdb";
 import { posterUrl, toMediaType } from "@/lib/tmdb";
 import type { WatchlistItem } from "@/types/watchlist";
-import { GENRE_BADGE_COLORS } from "@/types/watchlist";
+import { GENRE_BADGE_COLORS, TMDB_GENRE_MAP } from "@/types/watchlist";
 
 interface DetailModalProps {
     item: WatchlistItem | null;
-    searchResult: OmdbSearchItem | null;
+    searchResult: TmdbSearchResult | null;
     isOpen: boolean;
     onClose: () => void;
     onAdd: () => void;
@@ -21,13 +21,13 @@ interface DetailModalProps {
 export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMarkWatched, onMarkUnwatched, onRemove }: DetailModalProps) {
     if (!isOpen) return null;
 
-    const title = item?.title || searchResult?.Title || "Unknown";
-    const overview = item?.overview || "";
-    const poster = item?.posterUrl || posterUrl(searchResult?.Poster);
-    const year = item?.releaseDate || (searchResult?.Year || "").slice(0, 4);
-    const rating = item?.voteAverage || 0;
-    const genres = item?.genres || [];
-    const mediaType = item?.mediaType || (searchResult ? toMediaType(searchResult.Type) : "movie");
+    const title = item?.title || searchResult?.title || searchResult?.name || "Unknown";
+    const overview = item?.overview || searchResult?.overview || "";
+    const poster = item?.posterUrl || posterUrl(searchResult?.poster_path ?? null);
+    const year = item?.releaseDate || (searchResult?.release_date || searchResult?.first_air_date || "").slice(0, 4);
+    const rating = item?.voteAverage || searchResult?.vote_average || 0;
+    const genres = item?.genres || (searchResult?.genre_ids ? Array.from(new Set(searchResult.genre_ids.map((id) => TMDB_GENRE_MAP[id]).filter(Boolean))) : []);
+    const mediaType = item?.mediaType || (searchResult ? toMediaType(searchResult.media_type as "movie" | "tv") : "movie");
     const isWatched = item?.status === "watched";
     const isInWatchlist = !!item;
 

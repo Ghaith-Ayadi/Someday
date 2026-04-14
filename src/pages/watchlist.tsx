@@ -11,7 +11,7 @@ import { WatchlistGrid } from "@/components/app/watchlist-grid";
 import { WatchlistList } from "@/components/app/watchlist-list";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, useFilterCounts, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
-import type { OmdbSearchItem } from "@/lib/tmdb";
+import type { TmdbSearchResult } from "@/lib/tmdb";
 import { toMediaType } from "@/lib/tmdb";
 import { useToast } from "@/providers/toast-provider";
 import type { Genre, WatchlistItem, WatchStatus } from "@/types/watchlist";
@@ -70,7 +70,7 @@ const DEFAULT_DIR: Record<SortOption, SortDir> = {
 export function WatchlistPage() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [detailItem, setDetailItem] = useState<WatchlistItem | null>(null);
-    const [detailSearchResult, setDetailSearchResult] = useState<OmdbSearchItem | null>(null);
+    const [detailSearchResult, setDetailSearchResult] = useState<TmdbSearchResult | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [filterKeys, setFilterKeys] = useState<Set<string>>(new Set());
     const [sort, setSort] = useState<SortOption>("added");
@@ -118,8 +118,8 @@ export function WatchlistPage() {
         return sortItems(items, sort, sortDir);
     }, [tvItems, statusFilter, sort, sortDir]);
 
-    const detailImdbId = detailSearchResult?.imdbID;
-    const detailMediaType = detailSearchResult ? toMediaType(detailSearchResult.Type) : "movie";
+    const detailImdbId = detailSearchResult?.id;
+    const detailMediaType = detailSearchResult ? toMediaType(detailSearchResult.media_type) : "movie";
     const detailWatchlistItem = useLiveQuery(
         () => (detailImdbId ? db.items.get(buildId(detailMediaType, detailImdbId)) : undefined),
         [detailImdbId, detailMediaType],
@@ -134,7 +134,7 @@ export function WatchlistPage() {
     const handleItemClick = useCallback((item: WatchlistItem) => {
         setDetailItem(item); setDetailSearchResult(null); setIsDetailOpen(true);
     }, []);
-    const handleSearchSelect = useCallback((result: OmdbSearchItem) => {
+    const handleSearchSelect = useCallback((result: TmdbSearchResult) => {
         setDetailSearchResult(result); setDetailItem(null); setIsDetailOpen(true); setIsSearchOpen(false);
     }, []);
     const handleCloseDetail = useCallback(() => {
@@ -144,7 +144,7 @@ export function WatchlistPage() {
     const handleDetailAdd = useCallback(async () => {
         if (detailSearchResult) {
             await addToWatchlist(detailSearchResult);
-            addToast(`Added "${detailSearchResult.Title}" to list`);
+            addToast(`Added "${(detailSearchResult.title || detailSearchResult.name)}" to list`);
             handleCloseDetail();
         }
     }, [detailSearchResult, addToast, handleCloseDetail]);

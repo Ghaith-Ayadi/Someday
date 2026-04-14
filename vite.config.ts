@@ -12,10 +12,10 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            "/omdb": {
-                target: "https://www.omdbapi.com",
+            "/tmdb": {
+                target: "https://api.themoviedb.org/3",
                 changeOrigin: true,
-                rewrite: (p) => p.replace(/^\/omdb/, "/"),
+                rewrite: (p) => p.replace(/^\/tmdb/, ""),
             },
         },
     },
