@@ -8,15 +8,22 @@ interface FilterOption {
     group?: string;
 }
 
+interface FilterOptionCounts {
+    movies: number;
+    series: number;
+}
+
 interface FilterPopoverProps {
     options: FilterOption[];
     selected: Set<string>;
     onChange: (selected: Set<string>) => void;
     icon: React.ComponentType<{ className?: string }>;
     label?: string;
+    /** Map of option id -> { movies, series } counts */
+    counts?: Map<string, FilterOptionCounts>;
 }
 
-export function FilterPopover({ options, selected, onChange, icon: Icon, label }: FilterPopoverProps) {
+export function FilterPopover({ options, selected, onChange, icon: Icon, label, counts }: FilterPopoverProps) {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -83,7 +90,12 @@ export function FilterPopover({ options, selected, onChange, icon: Icon, label }
                                         >
                                             {selected.has(opt.id) && <Check className="size-3 text-white" strokeWidth={3} />}
                                         </div>
-                                        <span className="capitalize">{opt.label}</span>
+                                        <span className="flex-1 capitalize">{opt.label}</span>
+                                        {counts?.has(opt.id) && (
+                                            <span className="text-xs text-quaternary">
+                                                {counts.get(opt.id)!.movies}M · {counts.get(opt.id)!.series}S
+                                            </span>
+                                        )}
                                     </button>
                                 ))}
                             </div>

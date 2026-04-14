@@ -26,6 +26,39 @@ export function useWatchlistItems(mediaType: MediaType, genreFilter?: Genre[]) {
     );
 }
 
+/** Get counts per filter option (movies and series) for filter UI */
+export function useFilterCounts() {
+    return useLiveQuery(
+        async () => {
+            const items = await db.items.toArray();
+            const counts = new Map<string, { movies: number; series: number }>();
+
+            // Status counts
+            for (const status of ["watchlist", "watched"] as WatchStatus[]) {
+                const key = `status:${status}`;
+                counts.set(key, {
+                    movies: items.filter((i) => i.status === status && i.mediaType === "movie").length,
+                    series: items.filter((i) => i.status === status && i.mediaType === "tv").length,
+                });
+            }
+
+            // Genre counts
+            const allGenres: Genre[] = ["action", "comedy", "drama", "thriller", "horror", "sci-fi", "romance", "animation", "documentary", "fantasy"];
+            for (const genre of allGenres) {
+                const key = `genre:${genre}`;
+                counts.set(key, {
+                    movies: items.filter((i) => i.genres.includes(genre) && i.mediaType === "movie").length,
+                    series: items.filter((i) => i.genres.includes(genre) && i.mediaType === "tv").length,
+                });
+            }
+
+            return counts;
+        },
+        [],
+        new Map<string, { movies: number; series: number }>(),
+    );
+}
+
 /** Get all watchlist item IDs as a Set for fast lookup */
 export function useWatchlistIds() {
     return useLiveQuery(

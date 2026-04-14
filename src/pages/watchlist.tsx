@@ -10,7 +10,7 @@ import { ToastContainer } from "@/components/app/toast";
 import { WatchlistGrid } from "@/components/app/watchlist-grid";
 import { WatchlistList } from "@/components/app/watchlist-list";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
-import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
+import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, useFilterCounts, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
 import type { OmdbSearchItem } from "@/lib/tmdb";
 import { toMediaType } from "@/lib/tmdb";
 import { useToast } from "@/providers/toast-provider";
@@ -103,6 +103,7 @@ export function WatchlistPage() {
     const movieItems = useWatchlistItems("movie", genreFilter.length > 0 ? genreFilter : undefined);
     const tvItems = useWatchlistItems("tv", genreFilter.length > 0 ? genreFilter : undefined);
     const counts = useWatchlistCounts();
+    const filterCounts = useFilterCounts();
     const { addToast } = useToast();
 
     const filteredMovies = useMemo(() => {
@@ -165,10 +166,6 @@ export function WatchlistPage() {
     const handleRemove = useCallback(async (id: string, title: string) => { await removeFromWatchlist(id); addToast(`Removed "${title}" `); }, [addToast]);
 
     const activeFilterCount = filterKeys.size;
-    const filterLabel = useMemo(() => {
-        if (activeFilterCount === 0) return undefined;
-        return `${filteredMovies.length}M · ${filteredTv.length}S`;
-    }, [activeFilterCount, filteredMovies.length, filteredTv.length]);
 
     const gridActions = useCallback(
         (items: WatchlistItem[]) => ({
@@ -198,7 +195,8 @@ export function WatchlistPage() {
                     selected={filterKeys}
                     onChange={setFilterKeys}
                     icon={FilterLines}
-                    label={filterLabel}
+                    label={activeFilterCount > 0 ? `${activeFilterCount}` : undefined}
+                    counts={filterCounts}
                 />
             }
             sortTrigger={
