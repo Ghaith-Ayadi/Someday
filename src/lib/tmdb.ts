@@ -44,7 +44,7 @@ export function posterUrl(poster: string | undefined): string | null {
 
 /** Search for movies and series */
 export async function searchAll(query: string, signal?: AbortSignal): Promise<OmdbSearchItem[]> {
-    const url = `${OMDB_BASE}/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}`;
+    const url = `${OMDB_BASE}?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}`;
     const res = await fetch(url, { signal });
     if (!res.ok) throw new Error(`OMDb search failed: ${res.status}`);
     const data: OmdbSearchResponse = await res.json();
@@ -55,7 +55,7 @@ export async function searchAll(query: string, signal?: AbortSignal): Promise<Om
 
 /** Get detailed info for a single title */
 export async function getDetails(imdbId: string, signal?: AbortSignal): Promise<OmdbDetail | null> {
-    const url = `${OMDB_BASE}/?apikey=${OMDB_API_KEY}&i=${imdbId}&plot=short`;
+    const url = `${OMDB_BASE}?apikey=${OMDB_API_KEY}&i=${imdbId}&plot=short`;
     const res = await fetch(url, { signal });
     if (!res.ok) throw new Error(`OMDb detail failed: ${res.status}`);
     const data: OmdbDetail = await res.json();

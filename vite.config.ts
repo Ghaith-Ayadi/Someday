@@ -15,7 +15,7 @@ export default defineConfig({
             "/omdb": {
                 target: "https://www.omdbapi.com",
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/omdb/, "/"),
+                rewrite: (p) => p.replace(/^\/omdb/, "/"),
             },
         },
     },
