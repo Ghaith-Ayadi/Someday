@@ -5,11 +5,12 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { SearchResultItem } from "@/components/app/search-result-item";
 import { Badge } from "@/components/base/badges/badges";
 import { useMovieSearch } from "@/hooks/use-tmdb-search";
-import { addToWatchlist, useWatchlistIds } from "@/hooks/use-watchlist";
+import { addToWatchlist, useWatchlistIds, useWatchlistStatusMap } from "@/hooks/use-watchlist";
 import type { OmdbSearchItem } from "@/lib/tmdb";
 import { posterUrl, toMediaType } from "@/lib/tmdb";
 import { useToast } from "@/providers/toast-provider";
 import { buildId } from "@/types/watchlist";
+import { cx } from "@/utils/cx";
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ type Column = "movies" | "series";
 export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayProps) {
     const { query, setQuery, results, isLoading, error, reset } = useMovieSearch();
     const watchlistIds = useWatchlistIds();
+    const watchlistStatus = useWatchlistStatusMap();
     const { addToast } = useToast();
     const [activeColumn, setActiveColumn] = useState<Column>("movies");
     const [movieIndex, setMovieIndex] = useState(0);
@@ -118,6 +120,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
     const noResults = !isLoading && !error && query.length >= 2 && movies.length === 0 && series.length === 0;
     const poster = selectedItem ? posterUrl(selectedItem.Poster) : null;
     const isSelectedInWatchlist = selectedItem ? watchlistIds.has(buildId(toMediaType(selectedItem.Type), selectedItem.imdbID)) : false;
+    const selectedStatus = selectedItem ? watchlistStatus.get(buildId(toMediaType(selectedItem.Type), selectedItem.imdbID)) : undefined;
 
     return (
         <AnimatePresence>
@@ -135,7 +138,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="flex w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-secondary bg-primary shadow-xl"
+                        className="flex w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-secondary bg-primary shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Search input */}
@@ -145,7 +148,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                 ref={inputRef}
                                 type="text"
                                 value={query}
-                                onChange={(e) => setQuery(e.target.value)}
+                                onChange={(e) => setQuery(e.target.value.trimEnd())}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Search movies and series..."
                                 className="flex-1 bg-transparent text-md text-primary outline-none placeholder:text-placeholder"
@@ -181,7 +184,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
 
                             {/* Three columns: movies | series | preview */}
                             {hasResults && (
-                                <div className="flex max-h-[480px]">
+                                <div className="flex max-h-[560px]">
                                     {/* Movies column */}
                                     <div className="flex w-[30%] flex-col overflow-y-auto border-r border-secondary">
                                         <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
@@ -196,6 +199,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                                         <SearchResultItem
                                                             result={result}
                                                             isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
+                                                            watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
                                                             isSelected={activeColumn === "movies" && i === movieIndex}
                                                             onAdd={() => handleAdd(result)}
                                                             onClick={() => onSelectItem(result)}
@@ -222,6 +226,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                                         <SearchResultItem
                                                             result={result}
                                                             isInWatchlist={watchlistIds.has(buildId(toMediaType(result.Type), result.imdbID))}
+                                                            watchStatus={watchlistStatus.get(buildId(toMediaType(result.Type), result.imdbID))}
                                                             isSelected={activeColumn === "series" && i === seriesIndex}
                                                             onAdd={() => handleAdd(result)}
                                                             onClick={() => onSelectItem(result)}
@@ -238,7 +243,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                     <div className="flex w-[40%] flex-col items-center justify-center p-5">
                                         {selectedItem ? (
                                             <div className="flex flex-col items-center gap-3 text-center">
-                                                <div className="h-72 w-48 overflow-hidden rounded-lg bg-tertiary shadow-md">
+                                                <div className="h-[450px] w-[300px] overflow-hidden rounded-lg bg-tertiary shadow-md">
                                                     {poster ? (
                                                         <img src={poster} alt={selectedItem.Title} className="size-full object-cover" />
                                                     ) : (
@@ -261,7 +266,14 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                                         Add
                                                     </button>
                                                 ) : (
-                                                    <span className="mt-1 text-xs font-medium text-fg-success-primary">Added</span>
+                                                    <span className={cx(
+                                                        "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                                                        selectedStatus === "watched"
+                                                            ? "bg-success-secondary text-fg-success-primary"
+                                                            : "bg-brand-secondary text-fg-brand-primary",
+                                                    )}>
+                                                        {selectedStatus === "watched" ? "Watched" : "To watch"}
+                                                    </span>
                                                 )}
                                             </div>
                                         ) : (

@@ -38,6 +38,20 @@ export function useWatchlistIds() {
     );
 }
 
+/** Get a map of watchlist item IDs to their status for search result markers */
+export function useWatchlistStatusMap() {
+    return useLiveQuery(
+        async () => {
+            const items = await db.items.toArray();
+            const map = new Map<string, WatchStatus>();
+            for (const item of items) map.set(item.id, item.status);
+            return map;
+        },
+        [],
+        new Map<string, WatchStatus>(),
+    );
+}
+
 /** Get counts per media type */
 export function useWatchlistCounts() {
     return useLiveQuery(

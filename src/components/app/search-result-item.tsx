@@ -1,11 +1,13 @@
-import { Check, Plus } from "@untitledui/icons";
+import { Check, Eye, Plus } from "@untitledui/icons";
 import type { OmdbSearchItem } from "@/lib/tmdb";
 import { posterUrl } from "@/lib/tmdb";
+import type { WatchStatus } from "@/types/watchlist";
 import { cx } from "@/utils/cx";
 
 interface SearchResultItemProps {
     result: OmdbSearchItem;
     isInWatchlist: boolean;
+    watchStatus?: WatchStatus;
     isSelected: boolean;
     onAdd: () => void;
     onClick: () => void;
@@ -13,7 +15,7 @@ interface SearchResultItemProps {
     compact?: boolean;
 }
 
-export function SearchResultItem({ result, isInWatchlist, isSelected, onAdd, onClick, onHover, compact }: SearchResultItemProps) {
+export function SearchResultItem({ result, isInWatchlist, watchStatus, isSelected, onAdd, onClick, onHover, compact }: SearchResultItemProps) {
     const poster = posterUrl(result.Poster);
     const year = result.Year.slice(0, 4);
 
@@ -41,7 +43,16 @@ export function SearchResultItem({ result, isInWatchlist, isSelected, onAdd, onC
 
             {/* Info */}
             <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-medium text-primary">{result.Title}</span>
+                <div className="flex items-center gap-1.5">
+                    <span className="truncate text-sm font-medium text-primary">{result.Title}</span>
+                    {/* Status marker */}
+                    {watchStatus === "watched" && (
+                        <Check className="size-3 shrink-0 text-fg-success-primary" strokeWidth={3} />
+                    )}
+                    {watchStatus === "watchlist" && (
+                        <Eye className="size-3 shrink-0 text-fg-brand-primary" strokeWidth={2} />
+                    )}
+                </div>
                 <span className="text-xs text-quaternary">{year}</span>
             </div>
 
@@ -56,7 +67,7 @@ export function SearchResultItem({ result, isInWatchlist, isSelected, onAdd, onC
                     "flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition duration-100 ease-linear",
                     isInWatchlist
                         ? "text-fg-success-primary"
-                        : "text-fg-quaternary opacity-0 group-hover:opacity-100 hover:text-fg-secondary",
+                        : "text-fg-quaternary opacity-0 hover:text-fg-secondary",
                     isSelected && !isInWatchlist && "opacity-100",
                 )}
                 aria-label={isInWatchlist ? "Already added" : "Add to watchlist"}

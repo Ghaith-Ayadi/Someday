@@ -165,6 +165,10 @@ export function WatchlistPage() {
     const handleRemove = useCallback(async (id: string, title: string) => { await removeFromWatchlist(id); addToast(`Removed "${title}" `); }, [addToast]);
 
     const activeFilterCount = filterKeys.size;
+    const filterLabel = useMemo(() => {
+        if (activeFilterCount === 0) return undefined;
+        return `${filteredMovies.length}M · ${filteredTv.length}S`;
+    }, [activeFilterCount, filteredMovies.length, filteredTv.length]);
 
     const gridActions = useCallback(
         (items: WatchlistItem[]) => ({
@@ -194,7 +198,7 @@ export function WatchlistPage() {
                     selected={filterKeys}
                     onChange={setFilterKeys}
                     icon={FilterLines}
-                    label={activeFilterCount > 0 ? `${activeFilterCount}` : undefined}
+                    label={filterLabel}
                 />
             }
             sortTrigger={

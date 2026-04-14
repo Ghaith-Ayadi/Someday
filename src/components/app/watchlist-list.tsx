@@ -1,4 +1,4 @@
-import { Check, Clock, Eye, ReverseLeft, Star01, Trash01 } from "@untitledui/icons";
+import { Check, Eye, ReverseLeft, Star01, Trash01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { WatchlistItem } from "@/types/watchlist";
 import { GENRE_BADGE_COLORS } from "@/types/watchlist";
@@ -12,28 +12,39 @@ interface WatchlistListProps {
     onItemClick: (item: WatchlistItem) => void;
 }
 
+function Dot() {
+    return <span className="text-quaternary">·</span>;
+}
+
 export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove, onItemClick }: WatchlistListProps) {
     return (
         <div className="flex flex-col divide-y divide-secondary">
             {items.map((item) => {
                 const isWatched = item.status === "watched";
+                const meta = [
+                    item.releaseDate,
+                    item.runtime,
+                    item.rated && item.rated !== "N/A" ? item.rated : null,
+                    item.imdbRating ? `★ ${item.imdbRating}` : null,
+                ].filter(Boolean);
+
                 return (
                     <div
                         key={item.id}
                         onClick={() => onItemClick(item)}
-                        className="group flex cursor-pointer gap-3 py-3 transition duration-100 ease-linear hover:bg-primary_hover"
+                        className="group flex cursor-pointer gap-3.5 py-3 transition duration-100 ease-linear hover:bg-primary_hover"
                     >
-                        {/* Compact poster */}
-                        <div className="h-16 w-11 shrink-0 overflow-hidden rounded-md bg-tertiary">
+                        {/* Poster — 128px tall */}
+                        <div className="h-32 w-[86px] shrink-0 overflow-hidden rounded-md bg-tertiary">
                             {item.posterUrl ? (
                                 <img src={item.posterUrl} alt="" className="size-full object-cover" loading="lazy" />
                             ) : (
-                                <div className="flex size-full items-center justify-center text-[7px] text-quaternary">N/A</div>
+                                <div className="flex size-full items-center justify-center text-xs text-quaternary">N/A</div>
                             )}
                         </div>
 
                         {/* Content */}
-                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                             {/* Title row */}
                             <div className="flex items-center gap-2">
                                 <span className={cx("truncate text-sm font-semibold text-primary", isWatched && "text-tertiary")}>
@@ -42,54 +53,46 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                                 {isWatched && <Check className="size-3.5 shrink-0 text-fg-success-primary" />}
                             </div>
 
-                            {/* Meta row: year, runtime, rating, rated */}
-                            <div className="flex items-center gap-2 text-xs text-quaternary">
-                                {item.releaseDate && <span>{item.releaseDate}</span>}
-                                {item.runtime && (
-                                    <>
-                                        <span className="text-border-tertiary">·</span>
-                                        <span className="flex items-center gap-0.5">
-                                            <Clock className="size-3" />
-                                            {item.runtime}
+                            {/* Meta row with dot dividers */}
+                            {meta.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-quaternary">
+                                    {meta.map((m, i) => (
+                                        <span key={i} className="flex items-center gap-1.5">
+                                            {i > 0 && <Dot />}
+                                            <span>{m}</span>
                                         </span>
-                                    </>
-                                )}
-                                {item.imdbRating && (
-                                    <>
-                                        <span className="text-border-tertiary">·</span>
-                                        <span className="flex items-center gap-0.5">
-                                            <Star01 className="size-3 text-fg-warning-primary" />
-                                            {item.imdbRating}
-                                        </span>
-                                    </>
-                                )}
-                                {item.rated && item.rated !== "N/A" && (
-                                    <>
-                                        <span className="text-border-tertiary">·</span>
-                                        <span className="rounded border border-secondary px-1 py-px text-[10px] font-medium">{item.rated}</span>
-                                    </>
-                                )}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
 
                             {/* Director & actors */}
-                            <div className="flex items-center gap-1 text-xs text-tertiary">
-                                {item.director && (
-                                    <span className="truncate">
-                                        <span className="text-quaternary">Dir.</span> {item.director}
-                                    </span>
-                                )}
-                                {item.director && item.actors && <span className="text-border-tertiary">·</span>}
-                                {item.actors && <span className="truncate">{item.actors}</span>}
-                            </div>
+                            {(item.director || item.actors) && (
+                                <div className="flex items-center gap-1.5 text-xs text-tertiary">
+                                    {item.director && (
+                                        <span className="truncate">
+                                            <span className="text-quaternary">Dir.</span> {item.director}
+                                        </span>
+                                    )}
+                                    {item.director && item.actors && <Dot />}
+                                    {item.actors && <span className="truncate">{item.actors}</span>}
+                                </div>
+                            )}
+
+                            {/* Overview snippet */}
+                            {item.overview && (
+                                <p className="line-clamp-2 text-xs text-quaternary">{item.overview}</p>
+                            )}
 
                             {/* Genres */}
-                            <div className="flex items-center gap-1">
-                                {item.genres.slice(0, 3).map((genre) => (
-                                    <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
-                                        {genre}
-                                    </Badge>
-                                ))}
-                            </div>
+                            {item.genres.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                    {item.genres.slice(0, 4).map((genre) => (
+                                        <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
+                                            {genre}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Actions (visible on hover) */}
