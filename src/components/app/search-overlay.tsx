@@ -148,7 +148,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                                 ref={inputRef}
                                 type="text"
                                 value={query}
-                                onChange={(e) => setQuery(e.target.value.trimEnd())}
+                                onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Search movies and series..."
                                 className="flex-1 bg-transparent text-md text-primary outline-none placeholder:text-placeholder"
