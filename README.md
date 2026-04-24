@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="logo.png" width="128" height="128" alt="Anderson" />
+  <img src="logo.png" width="128" height="128" alt="Someday" />
 </p>
 
-<h1 align="center">Anderson</h1>
+<h1 align="center">Someday</h1>
 
 <p align="center">
   <strong>Keeping track of what to watch.</strong>
@@ -14,13 +14,11 @@
 
 ---
 
-## Why Anderson?
+## Why Someday?
 
 I keep forgetting what people recommend. Someone mentions a show at dinner, I think "I'll remember that" — I never do. I tried notes apps, spreadsheets, Letterboxd — all too heavy for what should be a 2-second action.
 
-Anderson is the simplest version of this: press Cmd+K, search, hit Enter. Done. Your list is there when you come back. No sign-up, no sync, no loading screens. Everything lives in your browser's IndexedDB and survives restarts.
-
-Named after Wes Anderson, obviously.
+Someday is the simplest version of this: press Cmd+K, search, hit Enter. Done. Your list is there when you come back.
 
 ---
 
@@ -40,7 +38,7 @@ Named after Wes Anderson, obviously.
 ---
 
 <p align="center">
-  <img src="screenshot.png" width="800" alt="Anderson — movie and series tracker" />
+  <img src="screenshot.png" width="800" alt="Someday — movie and series tracker" />
 </p>
 
 ---

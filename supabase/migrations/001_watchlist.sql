@@ -1,4 +1,4 @@
--- Anderson 1.2: watchlist sync schema.
+-- Someday 1.2: watchlist sync schema.
 -- Source of truth is the cloud; clients hold a local cache + push optimistically.
 -- `updated_at` is server-managed (trigger below), so conflicts resolve by server clock.
 

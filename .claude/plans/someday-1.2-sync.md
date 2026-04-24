@@ -1,4 +1,4 @@
-# Anderson 1.2 — Supabase Sync + Auth
+# Someday 1.2 — Supabase Sync + Auth
 
 ## Architecture
 

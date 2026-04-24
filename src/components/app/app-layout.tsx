@@ -20,8 +20,8 @@ export function AppLayout({ children, searchQuery, onSearchChange, onAddOpen, op
             {/* Header */}
             <header className="flex h-14 shrink-0 items-center gap-2 border-b border-secondary px-3">
                 {/* Logo */}
-                <img src="/favicon.png" alt="Anderson" className="size-7 shrink-0 rounded-md" />
-                <span className="hidden text-md font-semibold text-primary sm:block">Anderson</span>
+                <img src="/favicon.png" alt="Someday" className="size-7 shrink-0 rounded-md" />
+                <span className="hidden text-md font-semibold text-primary sm:block">Someday</span>
 
                 {/* Search input — local filter */}
                 <div className="relative mx-2 flex flex-1 items-center">
