@@ -33,11 +33,11 @@ export function SearchResultItem({ result, isInWatchlist, watchStatus, isSelecte
         >
             {/* Poster thumbnail */}
             {!compact && (
-                <div className="h-10 w-7 shrink-0 overflow-hidden rounded bg-tertiary">
+                <div className="h-18 w-12 shrink-0 overflow-hidden rounded bg-tertiary">
                     {poster ? (
                         <img src={poster} alt="" className="size-full object-cover" loading="lazy" />
                     ) : (
-                        <div className="flex size-full items-center justify-center text-[7px] text-quaternary">N/A</div>
+                        <div className="flex size-full items-center justify-center text-[9px] text-quaternary">N/A</div>
                     )}
                 </div>
             )}

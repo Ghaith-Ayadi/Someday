@@ -132,13 +132,19 @@ export function WatchlistPage() {
     const handleCloseDetail = useCallback(() => {
         setIsDetailOpen(false); setDetailItem(null); setDetailSearchResult(null);
     }, []);
+    const focusOnAdded = useCallback((mediaType: "movie" | "tv") => {
+        setActiveTab(mediaType === "movie" ? "movies" : "series");
+        setSearchQuery("");
+    }, []);
+
     const handleDetailAdd = useCallback(async () => {
         if (detailSearchResult) {
             await addToWatchlist(detailSearchResult);
             addToast(`Added "${detailSearchResult.title || detailSearchResult.name}" to list`);
+            focusOnAdded(toMediaType(detailSearchResult.media_type as "movie" | "tv"));
             handleCloseDetail();
         }
-    }, [detailSearchResult, addToast, handleCloseDetail]);
+    }, [detailSearchResult, addToast, handleCloseDetail, focusOnAdded]);
 
     const activeDetailItem = detailItem || detailWatchlistItem || null;
 
@@ -178,7 +184,8 @@ export function WatchlistPage() {
     const handleTmdbResultAdd = useCallback(async (result: TmdbSearchResult) => {
         await addToWatchlist(result);
         addToast(`Added "${result.title || result.name}" to list`);
-    }, [addToast]);
+        focusOnAdded(toMediaType(result.media_type as "movie" | "tv"));
+    }, [addToast, focusOnAdded]);
 
     return (
         <AppLayout
@@ -255,7 +262,7 @@ export function WatchlistPage() {
                 )}
             </div>
 
-            <SearchOverlay isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSelectItem={handleSearchSelect} />
+            <SearchOverlay isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSelectItem={handleSearchSelect} onItemAdded={focusOnAdded} />
             <DetailModal item={activeDetailItem} searchResult={detailSearchResult} isOpen={isDetailOpen} onClose={handleCloseDetail} onAdd={handleDetailAdd} onMarkWatched={handleDetailMarkWatched} onMarkUnwatched={handleDetailMarkUnwatched} onRemove={handleDetailRemove} />
             <ToastContainer />
         </AppLayout>

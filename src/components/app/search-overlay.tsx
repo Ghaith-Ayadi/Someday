@@ -3,6 +3,7 @@ import { Plus, SearchLg, XClose } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { SearchResultItem } from "@/components/app/search-result-item";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { useMovieSearch } from "@/hooks/use-tmdb-search";
 import { addToWatchlist, useWatchlistIds, useWatchlistStatusMap } from "@/hooks/use-watchlist";
 import type { TmdbSearchResult } from "@/lib/tmdb";
@@ -15,15 +16,17 @@ interface SearchOverlayProps {
     isOpen: boolean;
     onClose: () => void;
     onSelectItem: (result: TmdbSearchResult) => void;
+    onItemAdded?: (mediaType: "movie" | "tv") => void;
 }
 
 type Column = "movies" | "series";
 
-export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayProps) {
+export function SearchOverlay({ isOpen, onClose, onSelectItem, onItemAdded }: SearchOverlayProps) {
     const { query, setQuery, results, isLoading, error, reset } = useMovieSearch();
     const watchlistIds = useWatchlistIds();
     const watchlistStatus = useWatchlistStatusMap();
     const { addToast } = useToast();
+    const isDesktop = useBreakpoint("sm");
 
     // Two focus states: previewIndex (always shows preview) vs focusedIndex (visually highlighted)
     const [activeColumn, setActiveColumn] = useState<Column>("movies");
@@ -134,8 +137,9 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
         async (result: TmdbSearchResult) => {
             await addToWatchlist(result);
             addToast(`Added "${result.title || result.name}" to list`);
+            onItemAdded?.(toMediaType(result.media_type as "movie" | "tv"));
         },
-        [addToast],
+        [addToast, onItemAdded],
     );
 
     // Handle tap/click on a result: first tap = preview, second tap = add/remove
@@ -184,7 +188,7 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                     onAdd={() => handleAdd(result)}
                     onClick={() => handleResultTap(result, column, index)}
                     onHover={() => { setActiveColumn(column); setPreviewIdx(index); setFocusedIdx(index); }}
-                    compact
+                    compact={isDesktop}
                 />
             </div>
         );
@@ -249,45 +253,42 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem }: SearchOverlayPr
                             )}
                             {noResults && <div className="px-3 py-16 text-center text-sm text-tertiary">No results found</div>}
 
-                            {/* Results + Preview: 2-col on mobile, 3-col on desktop */}
+                            {/* 3 equal columns on desktop; movies + series stack on mobile, preview hidden */}
                             {hasResults && (
-                                <div className="flex max-h-[70vh] sm:max-h-[560px]">
-                                    {/* Results columns */}
-                                    <div className="flex w-full flex-col overflow-y-auto sm:w-[60%] sm:flex-row">
-                                        {/* Movies */}
-                                        <div className="flex flex-1 flex-col border-b border-secondary sm:border-r sm:border-b-0">
-                                            <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
-                                                Movies ({movies.length})
-                                            </div>
-                                            <div className="p-1">
-                                                {movies.length === 0 ? (
-                                                    <div className="py-6 text-center text-xs text-quaternary">No movies</div>
-                                                ) : (
-                                                    movies.map((r, i) => renderResultItem(r, "movies", i))
-                                                )}
-                                            </div>
+                                <div className="flex max-h-[70vh] flex-col sm:max-h-[560px] sm:flex-row">
+                                    {/* Movies */}
+                                    <div className="flex flex-1 flex-col overflow-y-auto border-b border-secondary sm:max-w-[280px] sm:border-r sm:border-b-0">
+                                        <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
+                                            Movies ({movies.length})
                                         </div>
+                                        <div className="p-1">
+                                            {movies.length === 0 ? (
+                                                <div className="py-6 text-center text-xs text-quaternary">No movies</div>
+                                            ) : (
+                                                movies.map((r, i) => renderResultItem(r, "movies", i))
+                                            )}
+                                        </div>
+                                    </div>
 
-                                        {/* Series */}
-                                        <div className="flex flex-1 flex-col">
-                                            <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
-                                                Series ({series.length})
-                                            </div>
-                                            <div className="p-1">
-                                                {series.length === 0 ? (
-                                                    <div className="py-6 text-center text-xs text-quaternary">No series</div>
-                                                ) : (
-                                                    series.map((r, i) => renderResultItem(r, "series", i))
-                                                )}
-                                            </div>
+                                    {/* Series */}
+                                    <div className="flex flex-1 flex-col overflow-y-auto sm:max-w-[280px] sm:border-r sm:border-secondary">
+                                        <div className="sticky top-0 z-10 border-b border-secondary bg-secondary px-3 py-1.5 text-xs font-semibold text-tertiary">
+                                            Series ({series.length})
+                                        </div>
+                                        <div className="p-1">
+                                            {series.length === 0 ? (
+                                                <div className="py-6 text-center text-xs text-quaternary">No series</div>
+                                            ) : (
+                                                series.map((r, i) => renderResultItem(r, "series", i))
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Preview pane */}
-                                    <div className="hidden w-[40%] flex-col items-center justify-center border-l border-secondary p-5 sm:flex">
+                                    <div className="hidden flex-1 flex-col items-center justify-center p-5 sm:flex">
                                         {previewItem ? (
                                             <div className="flex flex-col items-center gap-3 text-center">
-                                                <div className="h-[450px] w-[300px] overflow-hidden rounded-lg bg-tertiary shadow-md">
+                                                <div className="aspect-[2/3] w-full max-w-[260px] overflow-hidden rounded-lg bg-tertiary shadow-md">
                                                     {poster ? (
                                                         <img src={poster} alt={previewItem.title || previewItem.name || ""} className="size-full object-cover" />
                                                     ) : (
