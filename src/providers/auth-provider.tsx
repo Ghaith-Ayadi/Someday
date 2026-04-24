@@ -8,6 +8,7 @@ interface AuthContextValue {
     session: Session | null;
     isLoading: boolean;
     signIn: (email: string) => Promise<{ error: Error | null }>;
+    verifyOtp: (email: string, token: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -46,6 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     email,
                     options: { emailRedirectTo: window.location.origin },
                 });
+                return { error };
+            },
+            verifyOtp: async (email: string, token: string) => {
+                const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
                 return { error };
             },
             signOut: async () => {
