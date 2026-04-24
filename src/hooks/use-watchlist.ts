@@ -1,9 +1,12 @@
 import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db";
+import { scheduleSync } from "@/lib/sync";
 import type { TmdbSearchResult } from "@/lib/tmdb";
 import { extractCast, extractDirector, extractRating, extractRuntime, getDetails, posterUrl, toMediaType } from "@/lib/tmdb";
-import { db } from "@/lib/db";
 import type { Genre, MediaType, WatchlistItem, WatchStatus } from "@/types/watchlist";
 import { buildId, TMDB_GENRE_MAP } from "@/types/watchlist";
+
+const isActive = (i: WatchlistItem) => !i.deletedAt;
 
 /** Reactive query for watchlist items, filtered by media type and optionally by genres */
 export function useWatchlistItems(mediaType: MediaType, genreFilter?: Genre[]) {
@@ -14,7 +17,7 @@ export function useWatchlistItems(mediaType: MediaType, genreFilter?: Genre[]) {
                 .equals(mediaType)
                 .toArray()
                 .then((items) => {
-                    let filtered = items;
+                    let filtered = items.filter(isActive);
                     if (genreFilter && genreFilter.length > 0) {
                         filtered = filtered.filter((item) => item.genres.some((g) => genreFilter.includes(g)));
                     }
@@ -30,7 +33,7 @@ export function useWatchlistItems(mediaType: MediaType, genreFilter?: Genre[]) {
 export function useFilterCounts() {
     return useLiveQuery(
         async () => {
-            const items = await db.items.toArray();
+            const items = (await db.items.toArray()).filter(isActive);
             const counts = new Map<string, { movies: number; series: number }>();
 
             for (const status of ["watchlist", "watched"] as WatchStatus[]) {
@@ -61,7 +64,7 @@ export function useFilterCounts() {
 export function useWatchlistIds() {
     return useLiveQuery(
         async () => {
-            const items = await db.items.toArray();
+            const items = (await db.items.toArray()).filter(isActive);
             return new Set(items.map((item) => item.id));
         },
         [],
@@ -73,7 +76,7 @@ export function useWatchlistIds() {
 export function useWatchlistStatusMap() {
     return useLiveQuery(
         async () => {
-            const items = await db.items.toArray();
+            const items = (await db.items.toArray()).filter(isActive);
             const map = new Map<string, WatchStatus>();
             for (const item of items) map.set(item.id, item.status);
             return map;
@@ -87,9 +90,11 @@ export function useWatchlistStatusMap() {
 export function useWatchlistCounts() {
     return useLiveQuery(
         async () => {
-            const movies = await db.items.where("mediaType").equals("movie").count();
-            const tv = await db.items.where("mediaType").equals("tv").count();
-            return { movies, tv };
+            const items = (await db.items.toArray()).filter(isActive);
+            return {
+                movies: items.filter((i) => i.mediaType === "movie").length,
+                tv: items.filter((i) => i.mediaType === "tv").length,
+            };
         },
         [],
         { movies: 0, tv: 0 },
@@ -110,11 +115,11 @@ function mapGenres(genreIds: number[]): Genre[] {
 export async function addToWatchlist(result: TmdbSearchResult) {
     const mediaType = toMediaType(result.media_type as "movie" | "tv");
     const id = buildId(mediaType, String(result.id));
+    const now = Date.now();
 
-    // Basic info from search result
     const item: WatchlistItem = {
         id,
-        imdbId: String(result.id), // using tmdb ID
+        imdbId: String(result.id),
         mediaType,
         title: result.title || result.name || "Unknown",
         posterUrl: posterUrl(result.poster_path),
@@ -123,10 +128,10 @@ export async function addToWatchlist(result: TmdbSearchResult) {
         voteAverage: result.vote_average,
         genres: mapGenres(result.genre_ids),
         status: "watchlist",
-        addedAt: Date.now(),
+        addedAt: now,
+        updatedAt: now,
     };
 
-    // Fetch detail for rich metadata
     try {
         const detail = await getDetails(mediaType, result.id);
         if (detail) {
@@ -136,7 +141,6 @@ export async function addToWatchlist(result: TmdbSearchResult) {
             item.rated = extractRating(detail, mediaType);
             item.imdbRating = detail.vote_average ? String(detail.vote_average.toFixed(1)) : undefined;
             if (detail.overview) item.overview = detail.overview;
-            // Use detail genres (full names) if available
             if (detail.genres.length > 0) {
                 item.genres = mapGenres(detail.genres.map((g) => g.id));
             }
@@ -146,20 +150,56 @@ export async function addToWatchlist(result: TmdbSearchResult) {
     }
 
     await db.items.put(item);
+    scheduleSync();
+    return item;
+}
+
+/** Add a manual entry (no TMDB lookup), for offline or unlisted items. */
+export async function addManualToWatchlist(input: {
+    title: string;
+    mediaType: MediaType;
+    releaseDate?: string;
+    genres?: Genre[];
+}) {
+    const now = Date.now();
+    const uuid = crypto.randomUUID();
+    const item: WatchlistItem = {
+        id: `manual-${uuid}`,
+        imdbId: "",
+        mediaType: input.mediaType,
+        title: input.title,
+        posterUrl: null,
+        overview: "",
+        releaseDate: input.releaseDate ?? "",
+        voteAverage: 0,
+        genres: input.genres ?? [],
+        status: "watchlist",
+        addedAt: now,
+        updatedAt: now,
+        manual: true,
+    };
+    await db.items.put(item);
+    scheduleSync();
     return item;
 }
 
 /** Mark an item as watched */
 export async function markAsWatched(id: string) {
-    await db.items.update(id, { status: "watched" as WatchStatus, watchedAt: Date.now() });
+    const now = Date.now();
+    await db.items.update(id, { status: "watched" as WatchStatus, watchedAt: now, updatedAt: now });
+    scheduleSync();
 }
 
 /** Revert an item to watchlist (unwatched) */
 export async function markAsUnwatched(id: string) {
-    await db.items.update(id, { status: "watchlist" as WatchStatus, watchedAt: undefined });
+    const now = Date.now();
+    await db.items.update(id, { status: "watchlist" as WatchStatus, watchedAt: undefined, updatedAt: now });
+    scheduleSync();
 }
 
-/** Remove an item from the watchlist */
+/** Remove an item from the watchlist (soft delete — pruned after 30 days of being synced) */
 export async function removeFromWatchlist(id: string) {
-    await db.items.delete(id);
+    const now = Date.now();
+    await db.items.update(id, { deletedAt: now, updatedAt: now });
+    scheduleSync();
 }

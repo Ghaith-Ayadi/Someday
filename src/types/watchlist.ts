@@ -15,7 +15,7 @@ export type Genre =
     | "fantasy";
 
 export interface WatchlistItem {
-    /** Composite key: "{mediaType}-{imdbId}" */
+    /** Composite key: "{mediaType}-{imdbId}" or "manual-{uuid}" */
     id: string;
     imdbId: string;
     mediaType: MediaType;
@@ -28,6 +28,10 @@ export interface WatchlistItem {
     status: WatchStatus;
     addedAt: number;
     watchedAt?: number;
+    updatedAt: number;
+    syncedAt?: number;
+    deletedAt?: number;
+    manual?: boolean;
     // Rich metadata from OMDb detail
     director?: string;
     actors?: string;

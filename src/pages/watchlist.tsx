@@ -11,12 +11,13 @@ import { WatchlistGrid } from "@/components/app/watchlist-grid";
 import { WatchlistList } from "@/components/app/watchlist-list";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { useMovieSearch } from "@/hooks/use-tmdb-search";
+import { useSync } from "@/hooks/use-sync";
 import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, useFilterCounts, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
 import type { TmdbSearchResult } from "@/lib/tmdb";
 import { toMediaType } from "@/lib/tmdb";
 import { useToast } from "@/providers/toast-provider";
 import type { Genre, WatchlistItem, WatchStatus } from "@/types/watchlist";
-import { ALL_GENRES, buildId } from "@/types/watchlist";
+import { buildId } from "@/types/watchlist";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
@@ -46,6 +47,7 @@ function sortItems(items: WatchlistItem[], sort: SortOption, dir: SortDir): Watc
 }
 
 export function WatchlistPage() {
+    useSync();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [detailItem, setDetailItem] = useState<WatchlistItem | null>(null);
     const [detailSearchResult, setDetailSearchResult] = useState<TmdbSearchResult | null>(null);

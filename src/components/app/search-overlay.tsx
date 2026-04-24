@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Eye, Plus, SearchLg, XClose } from "@untitledui/icons";
+import { Plus, SearchLg, XClose } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { SearchResultItem } from "@/components/app/search-result-item";

@@ -1,4 +1,4 @@
-import { Check, Eye, ReverseLeft, Star01, Trash01 } from "@untitledui/icons";
+import { Check, Eye, ReverseLeft, Trash01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { WatchlistItem } from "@/types/watchlist";
 import { GENRE_BADGE_COLORS } from "@/types/watchlist";

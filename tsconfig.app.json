@@ -26,5 +26,12 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/components/application/carousel",
+    "src/components/application/charts",
+    "src/components/application/app-navigation",
+    "src/components/base/dropdown",
+    "src/components/marketing"
+  ]
 }

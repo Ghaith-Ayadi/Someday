@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { NotFound } from "@/pages/not-found";
 import { WatchlistPage } from "@/pages/watchlist";
+import { AuthProvider } from "@/providers/auth-provider";
 import { RouteProvider } from "@/providers/router-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastProvider } from "@/providers/toast-provider";
@@ -20,16 +21,18 @@ if ("serviceWorker" in navigator) {
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider>
-            <ToastProvider>
-                <BrowserRouter>
-                    <RouteProvider>
-                        <Routes>
-                            <Route path="/" element={<WatchlistPage />} />
-                            <Route path="*" element={<NotFound />} />
-                        </Routes>
-                    </RouteProvider>
-                </BrowserRouter>
-            </ToastProvider>
+            <AuthProvider>
+                <ToastProvider>
+                    <BrowserRouter>
+                        <RouteProvider>
+                            <Routes>
+                                <Route path="/" element={<WatchlistPage />} />
+                                <Route path="*" element={<NotFound />} />
+                            </Routes>
+                        </RouteProvider>
+                    </BrowserRouter>
+                </ToastProvider>
+            </AuthProvider>
         </ThemeProvider>
     </StrictMode>,
 );

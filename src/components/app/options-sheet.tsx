@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, LayoutGrid01, List, Menu01, Moon01, Sun } from "@untitledui/icons";
+import { Check, LayoutGrid01, List, Menu01, Moon01, Sun } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
+import { AuthSection } from "@/components/app/auth-section";
 import { useTheme } from "@/providers/theme-provider";
-import type { Genre, WatchStatus } from "@/types/watchlist";
-import { ALL_GENRES, GENRE_BADGE_COLORS } from "@/types/watchlist";
+import { ALL_GENRES } from "@/types/watchlist";
 import { cx } from "@/utils/cx";
 
 export type ViewMode = "grid" | "list";
@@ -124,6 +124,11 @@ export function OptionsSheet(props: OptionsSheetProps) {
     function renderContent() {
         return (
             <div className="flex flex-col gap-1 p-2">
+                {/* Account */}
+                <AuthSection />
+
+                <div className="my-1 h-px bg-border-secondary" />
+
                 {/* View toggle */}
                 <div className="flex items-center justify-between rounded-lg px-3 py-2">
                     <span className="text-sm font-medium text-secondary">View</span>

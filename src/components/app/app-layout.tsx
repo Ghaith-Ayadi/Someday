@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Plus, SearchLg, XClose } from "@untitledui/icons";
-import { cx } from "@/utils/cx";
 
 interface AppLayoutProps {
     children: ReactNode;
