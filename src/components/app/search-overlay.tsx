@@ -223,9 +223,10 @@ export function SearchOverlay({ isOpen, onClose, onSelectItem, onItemAdded }: Se
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Search movies and series to add..."
-                                className="flex-1 bg-transparent text-md text-primary outline-none placeholder:text-placeholder"
+                                className="flex-1 bg-transparent text-base text-primary outline-none placeholder:text-placeholder sm:text-md"
                                 autoComplete="off"
                                 spellCheck={false}
+                                autoFocus
                             />
                             {query && (
                                 <button

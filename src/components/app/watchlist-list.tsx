@@ -32,7 +32,7 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                     <div
                         key={item.id}
                         onClick={() => onItemClick(item)}
-                        className="group flex cursor-pointer gap-3.5 py-3 transition duration-100 ease-linear hover:bg-primary_hover"
+                        className="group flex cursor-pointer gap-3.5 py-3 transition duration-100 ease-linear hover:bg-primary_hover sm:px-4 sm:py-2"
                     >
                         {/* Poster — 128px tall */}
                         <div className="h-32 w-[86px] shrink-0 overflow-hidden rounded-md bg-tertiary">
@@ -45,12 +45,21 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
 
                         {/* Content */}
                         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                            {/* Title row */}
-                            <div className="flex items-center gap-2">
+                            {/* Title row — genre chips inline on desktop */}
+                            <div className="flex min-w-0 items-center gap-2">
                                 <span className={cx("truncate text-sm font-semibold text-primary", isWatched && "text-tertiary")}>
                                     {item.title}
                                 </span>
                                 {isWatched && <Check className="size-3.5 shrink-0 text-fg-success-primary" />}
+                                {item.genres.length > 0 && (
+                                    <div className="hidden shrink-0 items-center gap-1 sm:flex">
+                                        {item.genres.slice(0, 3).map((genre) => (
+                                            <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
+                                                {genre}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Meta row with dot dividers */}
@@ -83,9 +92,9 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                                 <p className="line-clamp-2 text-xs text-quaternary">{item.overview}</p>
                             )}
 
-                            {/* Genres */}
+                            {/* Genres — mobile only (chips inline with title on desktop) */}
                             {item.genres.length > 0 && (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 sm:hidden">
                                     {item.genres.slice(0, 4).map((genre) => (
                                         <Badge key={genre} size="sm" color={GENRE_BADGE_COLORS[genre]} className="capitalize">
                                             {genre}

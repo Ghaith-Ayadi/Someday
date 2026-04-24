@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { Plus, SearchLg, XClose } from "@untitledui/icons";
 
 interface AppLayoutProps {
@@ -15,47 +15,59 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, searchQuery, onSearchChange, onAddOpen, optionsSheet, bottomTabs }: AppLayoutProps) {
+    const searchRef = useRef<HTMLInputElement>(null);
+
+    // Auto-focus the header search on desktop. On mobile we deliberately skip this
+    // to avoid the keyboard popping up on every page load.
+    useEffect(() => {
+        if (window.matchMedia("(min-width: 640px)").matches) {
+            searchRef.current?.focus();
+        }
+    }, []);
+
     return (
-        <div className="flex h-dvh flex-col bg-primary">
-            {/* Header */}
-            <header className="flex h-14 shrink-0 items-center gap-2 border-b border-secondary px-3">
-                {/* Logo */}
-                <img src="/favicon.png" alt="Someday" className="size-7 shrink-0 rounded-md" />
-                <span className="hidden text-md font-semibold text-primary sm:block">Someday</span>
+        <div className="flex h-dvh flex-col overflow-x-hidden bg-primary">
+            {/* Header — border spans full width, inner content capped to match main */}
+            <header className="h-14 shrink-0 border-b border-secondary">
+                <div className="mx-auto flex h-full max-w-5xl items-center gap-2 px-3">
+                    <img src="/favicon.png" alt="Someday" className="size-7 shrink-0 rounded-md" />
+                    <span className="hidden text-md font-semibold text-primary sm:block">Someday</span>
 
-                {/* Search input — local filter */}
-                <div className="relative mx-2 flex flex-1 items-center">
-                    <SearchLg className="pointer-events-none absolute left-2.5 size-4 text-fg-quaternary" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        placeholder="Search watchlist..."
-                        className="w-full rounded-lg border border-secondary bg-primary py-1.5 pl-8 pr-8 text-sm text-primary outline-none placeholder:text-placeholder transition duration-100 ease-linear focus:border-brand focus:ring-1 focus:ring-brand"
-                    />
-                    {searchQuery && (
-                        <button
-                            type="button"
-                            onClick={() => onSearchChange("")}
-                            className="absolute right-2 flex size-5 cursor-pointer items-center justify-center rounded text-fg-quaternary hover:text-fg-secondary"
-                        >
-                            <XClose className="size-3.5" />
-                        </button>
-                    )}
+                    {/* Local filter */}
+                    <div className="relative mx-2 flex flex-1 items-center">
+                        <SearchLg className="pointer-events-none absolute left-2.5 size-4 text-fg-quaternary" />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            placeholder="Search watchlist..."
+                            className="w-full rounded-lg border border-secondary bg-primary py-1.5 pl-8 pr-8 text-base text-primary outline-none placeholder:text-placeholder transition duration-100 ease-linear focus:border-brand focus:ring-1 focus:ring-brand sm:text-sm"
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => onSearchChange("")}
+                                className="absolute right-2 flex size-5 cursor-pointer items-center justify-center rounded text-fg-quaternary hover:text-fg-secondary"
+                            >
+                                <XClose className="size-3.5" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Add button — desktop only, with ⌘K hint */}
+                    <button
+                        type="button"
+                        onClick={onAddOpen}
+                        className="hidden shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-solid py-1.5 pl-3 pr-2 text-sm font-semibold text-white shadow-xs transition duration-100 ease-linear hover:bg-brand-solid_hover sm:flex"
+                    >
+                        <Plus className="size-4" />
+                        Add
+                        <kbd className="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-medium opacity-90">⌘K</kbd>
+                    </button>
+
+                    {optionsSheet}
                 </div>
-
-                {/* Add button — desktop only */}
-                <button
-                    type="button"
-                    onClick={onAddOpen}
-                    className="hidden shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-solid px-3 py-1.5 text-sm font-semibold text-white shadow-xs transition duration-100 ease-linear hover:bg-brand-solid_hover sm:flex"
-                >
-                    <Plus className="size-4" />
-                    Add
-                </button>
-
-                {/* Options hamburger */}
-                {optionsSheet}
             </header>
 
             {/* Main content — add bottom padding on mobile for bottom tabs + FAB */}

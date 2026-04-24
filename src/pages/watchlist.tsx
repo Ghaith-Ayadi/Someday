@@ -215,7 +215,7 @@ export function WatchlistPage() {
         >
             <OfflineBanner />
 
-            <div className="mx-auto w-full max-w-[800px] px-4 py-4 sm:py-6">
+            <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:py-6">
                 {/* Desktop tabs — hidden on mobile (bottom tabs replace them) */}
                 <Tabs selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
                     <div className="hidden sm:block">
