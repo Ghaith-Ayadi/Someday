@@ -52,7 +52,7 @@ export function AuthSection() {
 
     const handleCodeSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (code.length !== 6) return;
+        if (code.length < 6) return;
         setStatus("verifying");
         setErrorMessage(null);
         const { error } = await verifyOtp(email, code);
@@ -69,20 +69,20 @@ export function AuthSection() {
             <form onSubmit={handleCodeSubmit} className="flex flex-col gap-2 px-3 py-2">
                 <div>
                     <div className="text-sm font-medium text-secondary">Enter the code</div>
-                    <div className="mt-0.5 text-xs text-tertiary">We sent a 6-digit code to {email}.</div>
+                    <div className="mt-0.5 text-xs text-tertiary">We sent a code to {email}.</div>
                 </div>
                 <Input
                     type="text"
                     size="sm"
-                    placeholder="123456"
+                    placeholder="Paste code"
                     value={code}
-                    onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
+                    onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 10))}
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     isInvalid={status === "error"}
                     hint={status === "error" ? errorMessage ?? "Invalid code" : undefined}
                 />
-                <Button type="submit" size="sm" color="primary" isLoading={status === "verifying"} isDisabled={code.length !== 6}>
+                <Button type="submit" size="sm" color="primary" isLoading={status === "verifying"} isDisabled={code.length < 6}>
                     Verify
                 </Button>
                 <button
