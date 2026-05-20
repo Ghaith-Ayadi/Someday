@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import type { Genre, MediaType, WatchStatus, WatchlistItem } from "@/types/watchlist";
 
 const LAST_PULL_KEY = "lastPullIso";
-const DEBOUNCE_MS = 2000;
+const DEBOUNCE_MS = 500;
 const CLEANUP_DAYS = 30;
 
 let currentUserId: string | null = null;
@@ -11,7 +11,7 @@ let syncInFlight = false;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let onSyncComplete: (() => void) | null = null;
 
-interface WatchlistRow {
+export interface WatchlistRow {
     id: string;
     user_id: string;
     imdb_id: string | null;
@@ -72,7 +72,7 @@ function toRow(item: WatchlistItem, userId: string) {
     };
 }
 
-function fromRow(row: WatchlistRow): WatchlistItem {
+export function fromRow(row: WatchlistRow): WatchlistItem {
     return {
         id: row.id,
         imdbId: row.imdb_id ?? "",

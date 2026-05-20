@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { startRealtime, stopRealtime } from "@/lib/realtime";
 import { runSync, setSyncListener } from "@/lib/sync";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -13,23 +14,20 @@ export function useSync() {
     }, []);
 
     useEffect(() => {
-        if (!user) return;
-
-        const run = async () => {
-            setIsSyncing(true);
-            try {
-                await runSync();
-            } finally {
-                setIsSyncing(false);
-            }
-        };
-
-        void run();
-
-        const onFocus = () => void run();
-        window.addEventListener("focus", onFocus);
-        return () => window.removeEventListener("focus", onFocus);
+        if (!user) {
+            stopRealtime();
+            return;
+        }
+        // Realtime handles ongoing server→client updates; its SUBSCRIBED callback
+        // also triggers an initial push/pull reconcile.
+        startRealtime(user.id);
+        return () => stopRealtime();
     }, [user]);
+
+    // `isSyncing` is a rough indicator driven by the sync listener pings.
+    useEffect(() => {
+        if (lastSyncedAt) setIsSyncing(false);
+    }, [lastSyncedAt]);
 
     return { isSyncing, lastSyncedAt, isSignedIn: !!user };
 }
