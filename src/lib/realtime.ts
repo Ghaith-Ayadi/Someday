@@ -15,6 +15,12 @@ let unsubscribeConnect: Unsubscribe | null = null;
 export async function startRealtime(userId: string) {
     await stopRealtime();
 
+    // Register the connect listener BEFORE the first subscription opens the
+    // stream, or the initial PB_CONNECT fires with nobody listening.
+    unsubscribeConnect = await pb.realtime.subscribe("PB_CONNECT", () => {
+        void runSync();
+    });
+
     unsubscribeItems = await pb.collection("watchlist_items").subscribe<WatchlistRecord>(
         "*",
         async (e) => {
@@ -27,11 +33,9 @@ export async function startRealtime(userId: string) {
         { filter: pb.filter("user = {:u}", { u: userId }) },
     );
 
-    // PB_CONNECT fires on the first connection and after every automatic
-    // reconnect, which is the moment to reconcile.
-    unsubscribeConnect = await pb.realtime.subscribe("PB_CONNECT", () => {
-        void runSync();
-    });
+    // Belt and braces: whatever the connect event did, the first sync after
+    // sign-in must happen. runSync is idempotent and guards against overlap.
+    void runSync();
 }
 
 export async function stopRealtime() {
