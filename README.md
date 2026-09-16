@@ -22,7 +22,7 @@
 
 - **Cmd+K search** — instant search across TMDB, split by movies and series, poster preview on selection
 - **Local-first** — IndexedDB via Dexie.js, sub-millisecond reads, works offline
-- **Cloud sync** — optional sign-in with magic link or 6-digit code; your list follows you across devices
+- **Cloud sync** — optional sign-in with Google; your list follows you across devices
 - **PWA** — installable on iOS/Android/desktop, offline after first load
 - **Grid and list views** — toggle between poster cards and compact rows
 - **Filters + sort** — by watch status, genre (10 categories), date added, name, year
@@ -34,7 +34,7 @@
 - React 19 + TypeScript + Vite
 - Tailwind CSS v4 + Untitled UI components (React Aria)
 - Dexie.js (IndexedDB) for local data
-- Supabase (Postgres + Auth) for sync
+- PocketBase for sync and auth, self-hosted on Bedrock ([Ghaith-Ayadi/Bedrock](https://github.com/Ghaith-Ayadi/Bedrock))
 - TMDB API for search
 - Vercel for hosting
 
@@ -50,13 +50,14 @@ Create a `.env` file with:
 
 ```
 VITE_TMDB_ACCESS_TOKEN=your_tmdb_read_access_token
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+VITE_PB_URL=https://someday.ayadighaith.com
 ```
 
 - TMDB token: free, sign up at https://www.themoviedb.org/settings/api
-- Supabase: create a free project, copy URL + anon/publishable key from Settings → API
-- Run the schema migration in `supabase/migrations/001_watchlist.sql` (SQL Editor in Supabase dashboard)
+- PocketBase: the production instance runs on Bedrock. For a local one, run
+  PocketBase with the schema from `pb/someday/pb_migrations/` in the Bedrock repo
+  and point `VITE_PB_URL` at it. The old Supabase schema in `supabase/` is kept
+  for reference only.
 
 Start the dev server:
 
@@ -66,17 +67,18 @@ npm run dev
 
 Open http://localhost:5173.
 
-## Auth setup (optional, only if you enable sync)
+## Auth
 
-1. In Supabase → Authentication → URL Configuration, set **Site URL** and add **Redirect URLs** for your dev + prod origins
-2. In Authentication → Email Templates → Magic Link, paste the template in [`docs/magic-link-email.html`](docs/magic-link-email.html) so users get both a clickable link (for desktop) and a 6-digit code (for mobile PWAs)
-3. If you expect real-world volume, swap Supabase's built-in SMTP for a provider like Resend to lift the ~3/hour send limit
+Sign-in is Google only, handled by PocketBase's OAuth2 flow in a popup. The
+Google client and its redirect URI live on the PocketBase host, so the app's
+own origin needs no Google configuration. Configured on Bedrock, see its
+`docs/auth.md`.
 
 ## Architecture
 
-- Writes are **optimistic**: IndexedDB first (instant UI), then a debounced background push to Supabase
+- Writes are **optimistic**: IndexedDB first (instant UI), then a debounced background push to PocketBase. Items keep their own id locally (`client_id` server-side) plus the PocketBase record id as `remoteId`
 - Reads **always** hit IndexedDB — the network is never on the render path
-- The cloud is the source of truth; local is a cache that reconciles on sync
+- The cloud is the source of truth; local is a cache that reconciles on sync. Pulls ask for `updated > last pull`; live changes arrive over PocketBase's server-sent events
 - The service worker serves hashed assets cache-first, HTML network-first (so new deploys land immediately)
 
 ## Deploy

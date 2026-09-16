@@ -1,8 +1,19 @@
 import { db } from "@/lib/db";
-import { supabase } from "@/lib/supabase";
+import { pb, pbDateToMs } from "@/lib/pocketbase";
 import type { Genre, MediaType, WatchStatus, WatchlistItem } from "@/types/watchlist";
 
-const LAST_PULL_KEY = "lastPullIso";
+// Sync between the local Dexie cache and PocketBase.
+//
+// Dexie is what the UI reads; the server is the source of truth. Clients push
+// optimistically, then pull anything whose `updated` is newer than the last
+// pull. PocketBase manages `updated`, so conflicts resolve by server clock,
+// exactly as `updated_at` did before.
+//
+// Identity: the app's own item id ("movie-123", "manual-<uuid>") lives in
+// `client_id` on the server and stays the Dexie key. PocketBase's record id is
+// kept on the item as `remoteId` so updates need no lookup.
+
+const LAST_PULL_KEY = "lastPullPb";
 const DEBOUNCE_MS = 500;
 const CLEANUP_DAYS = 30;
 
@@ -11,95 +22,101 @@ let syncInFlight = false;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let onSyncComplete: (() => void) | null = null;
 
-export interface WatchlistRow {
+/** A `watchlist_items` record as PocketBase returns it. Empty text is "", empty number 0, empty date "". */
+export interface WatchlistRecord {
     id: string;
-    user_id: string;
-    imdb_id: string | null;
+    user: string;
+    client_id: string;
+    imdb_id: string;
     media_type: MediaType;
     title: string;
-    poster_url: string | null;
-    overview: string | null;
-    release_date: string | null;
-    vote_average: number | null;
+    poster_url: string;
+    overview: string;
+    release_date: string;
+    vote_average: number;
     genres: Genre[] | null;
     status: WatchStatus;
     added_at: number;
-    watched_at: number | null;
-    deleted_at: string | null;
-    updated_at: string;
+    watched_at: number;
+    deleted_at: string;
     manual: boolean;
-    director: string | null;
-    actors: string | null;
-    runtime: string | null;
-    rated: string | null;
-    writer: string | null;
-    language: string | null;
-    awards: string | null;
-    metascore: string | null;
-    imdb_rating: string | null;
-    rotten_tomatoes: string | null;
-    box_office: string | null;
+    director: string;
+    actors: string;
+    runtime: string;
+    rated: string;
+    writer: string;
+    language: string;
+    awards: string;
+    metascore: string;
+    imdb_rating: string;
+    rotten_tomatoes: string;
+    box_office: string;
+    created: string;
+    updated: string;
 }
 
-function toRow(item: WatchlistItem, userId: string) {
+function toRecord(item: WatchlistItem, userId: string) {
     return {
-        id: item.id,
-        user_id: userId,
-        imdb_id: item.imdbId || null,
+        user: userId,
+        client_id: item.id,
+        imdb_id: item.imdbId || "",
         media_type: item.mediaType,
         title: item.title,
-        poster_url: item.posterUrl,
-        overview: item.overview,
-        release_date: item.releaseDate,
-        vote_average: item.voteAverage,
-        genres: item.genres,
+        poster_url: item.posterUrl ?? "",
+        overview: item.overview ?? "",
+        release_date: item.releaseDate ?? "",
+        vote_average: item.voteAverage ?? 0,
+        genres: item.genres ?? [],
         status: item.status,
         added_at: item.addedAt,
         watched_at: item.watchedAt ?? null,
-        deleted_at: item.deletedAt ? new Date(item.deletedAt).toISOString() : null,
+        deleted_at: item.deletedAt ? new Date(item.deletedAt).toISOString() : "",
         manual: item.manual ?? false,
-        director: item.director ?? null,
-        actors: item.actors ?? null,
-        runtime: item.runtime ?? null,
-        rated: item.rated ?? null,
-        writer: item.writer ?? null,
-        language: item.language ?? null,
-        awards: item.awards ?? null,
-        metascore: item.metascore ?? null,
-        imdb_rating: item.imdbRating ?? null,
-        rotten_tomatoes: item.rottenTomatoes ?? null,
-        box_office: item.boxOffice ?? null,
+        director: item.director ?? "",
+        actors: item.actors ?? "",
+        runtime: item.runtime ?? "",
+        rated: item.rated ?? "",
+        writer: item.writer ?? "",
+        language: item.language ?? "",
+        awards: item.awards ?? "",
+        metascore: item.metascore ?? "",
+        imdb_rating: item.imdbRating ?? "",
+        rotten_tomatoes: item.rottenTomatoes ?? "",
+        box_office: item.boxOffice ?? "",
     };
 }
 
-export function fromRow(row: WatchlistRow): WatchlistItem {
+const text = (v: string) => v || undefined;
+
+export function fromRecord(r: WatchlistRecord): WatchlistItem {
     return {
-        id: row.id,
-        imdbId: row.imdb_id ?? "",
-        mediaType: row.media_type,
-        title: row.title,
-        posterUrl: row.poster_url,
-        overview: row.overview ?? "",
-        releaseDate: row.release_date ?? "",
-        voteAverage: row.vote_average ?? 0,
-        genres: row.genres ?? [],
-        status: row.status,
-        addedAt: Number(row.added_at),
-        watchedAt: row.watched_at != null ? Number(row.watched_at) : undefined,
-        deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : undefined,
-        updatedAt: new Date(row.updated_at).getTime(),
-        manual: row.manual,
-        director: row.director ?? undefined,
-        actors: row.actors ?? undefined,
-        runtime: row.runtime ?? undefined,
-        rated: row.rated ?? undefined,
-        writer: row.writer ?? undefined,
-        language: row.language ?? undefined,
-        awards: row.awards ?? undefined,
-        metascore: row.metascore ?? undefined,
-        imdbRating: row.imdb_rating ?? undefined,
-        rottenTomatoes: row.rotten_tomatoes ?? undefined,
-        boxOffice: row.box_office ?? undefined,
+        id: r.client_id,
+        remoteId: r.id,
+        imdbId: r.imdb_id ?? "",
+        mediaType: r.media_type,
+        title: r.title,
+        posterUrl: r.poster_url || null,
+        overview: r.overview ?? "",
+        releaseDate: r.release_date ?? "",
+        voteAverage: r.vote_average ?? 0,
+        genres: r.genres ?? [],
+        status: r.status,
+        addedAt: Number(r.added_at),
+        watchedAt: r.watched_at ? Number(r.watched_at) : undefined,
+        deletedAt: pbDateToMs(r.deleted_at) ?? undefined,
+        updatedAt: pbDateToMs(r.updated) ?? Date.now(),
+        manual: r.manual,
+        director: text(r.director),
+        actors: text(r.actors),
+        runtime: text(r.runtime),
+        rated: text(r.rated),
+        writer: text(r.writer),
+        language: text(r.language),
+        awards: text(r.awards),
+        metascore: text(r.metascore),
+        imdbRating: text(r.imdb_rating),
+        rottenTomatoes: text(r.rotten_tomatoes),
+        boxOffice: text(r.box_office),
     };
 }
 
@@ -134,57 +151,62 @@ export async function runSync(): Promise<void> {
     }
 }
 
+const items = () => pb.collection<WatchlistRecord>("watchlist_items");
+
 async function pushPending(userId: string) {
     const all = await db.items.toArray();
     const pending = all.filter((item) => !item.syncedAt || item.updatedAt > item.syncedAt);
     if (!pending.length) return;
 
-    const rows = pending.map((item) => toRow(item, userId));
-    const { data, error } = await supabase
-        .from("watchlist_items")
-        .upsert(rows)
-        .select();
-    if (error) {
-        console.error("Push failed:", error);
-        return;
-    }
-
-    const now = Date.now();
-    await db.transaction("rw", db.items, async () => {
-        for (const raw of data ?? []) {
-            const serverItem = fromRow(raw as WatchlistRow);
-            await db.items.put({ ...serverItem, syncedAt: now });
+    for (const item of pending) {
+        const body = toRecord(item, userId);
+        let saved: WatchlistRecord;
+        try {
+            if (item.remoteId) {
+                saved = await items().update(item.remoteId, body);
+            } else {
+                // First push of this item from this device. Another device may
+                // already have created it: (user, client_id) is unique server-side.
+                const existing = await items()
+                    .getFirstListItem(pb.filter("user = {:u} && client_id = {:c}", { u: userId, c: item.id }))
+                    .catch(() => null);
+                saved = existing ? await items().update(existing.id, body) : await items().create(body);
+            }
+        } catch (err) {
+            console.error("Push failed:", item.id, err);
+            continue;
         }
-    });
+        const serverItem = fromRecord(saved);
+        await db.items.put({ ...serverItem, syncedAt: Date.now() });
+    }
 }
 
 async function pullChanges(userId: string) {
     const meta = await db.syncMeta.get(LAST_PULL_KEY);
-    const lastPullIso = typeof meta?.value === "string" ? meta.value : "1970-01-01T00:00:00.000Z";
+    const since = typeof meta?.value === "string" ? meta.value : "1970-01-01T00:00:00.000Z";
 
-    const { data, error } = await supabase
-        .from("watchlist_items")
-        .select("*")
-        .eq("user_id", userId)
-        .gt("updated_at", lastPullIso)
-        .order("updated_at", { ascending: true });
-    if (error) {
-        console.error("Pull failed:", error);
+    let records: WatchlistRecord[];
+    try {
+        records = await items().getFullList({
+            filter: pb.filter("user = {:u} && updated > {:since}", { u: userId, since: new Date(since) }),
+            sort: "updated",
+        });
+    } catch (err) {
+        console.error("Pull failed:", err);
         return;
     }
-    if (!data?.length) return;
+    if (!records.length) return;
 
     const now = Date.now();
-    let maxIso = lastPullIso;
+    let maxMs = Date.parse(since);
     await db.transaction("rw", db.items, async () => {
-        for (const raw of data) {
-            const row = raw as WatchlistRow;
-            if (row.updated_at > maxIso) maxIso = row.updated_at;
-            const item = fromRow(row);
-            await db.items.put({ ...item, syncedAt: now });
+        for (const r of records) {
+            const ms = pbDateToMs(r.updated) ?? 0;
+            if (ms > maxMs) maxMs = ms;
+            await db.items.put({ ...fromRecord(r), syncedAt: now });
         }
     });
-    await db.syncMeta.put({ key: LAST_PULL_KEY, value: maxIso });
+    await db.syncMeta.put({ key: LAST_PULL_KEY, value: new Date(maxMs).toISOString() });
 }
 
 async function cleanupOldDeletes() {
