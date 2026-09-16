@@ -1,14 +1,15 @@
 import { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { pb, type PbUser } from "@/lib/pocketbase";
 import { setSyncUser } from "@/lib/sync";
 
+// Sign-in is Google only. PocketBase runs the OAuth2 flow in a popup and
+// persists the session in localStorage; `authStore.onChange` is the single
+// place the app learns about sign-in and sign-out.
+
 interface AuthContextValue {
-    user: User | null;
-    session: Session | null;
+    user: PbUser | null;
     isLoading: boolean;
-    signIn: (email: string) => Promise<{ error: Error | null }>;
-    verifyOtp: (email: string, token: string) => Promise<{ error: Error | null }>;
+    signInWithGoogle: () => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -20,44 +21,56 @@ export function useAuth() {
     return ctx;
 }
 
+function currentUser(): PbUser | null {
+    return pb.authStore.isValid ? (pb.authStore.record as PbUser) : null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<PbUser | null>(currentUser);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            setSession(data.session);
-            setSyncUser(data.session?.user?.id ?? null);
+        setSyncUser(user?.id ?? null);
+
+        const unsubscribe = pb.authStore.onChange((_token, record) => {
+            const next = pb.authStore.isValid ? (record as PbUser | null) : null;
+            setUser(next);
+            setSyncUser(next?.id ?? null);
+        });
+
+        // Validate a stored session once per load; a stale token signs out.
+        (async () => {
+            if (pb.authStore.isValid) {
+                try {
+                    await pb.collection("users").authRefresh();
+                } catch {
+                    pb.authStore.clear();
+                }
+            }
             setIsLoading(false);
-        });
-        const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-            setSession(nextSession);
-            setSyncUser(nextSession?.user?.id ?? null);
-        });
-        return () => sub.subscription.unsubscribe();
+        })();
+
+        return unsubscribe;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const value = useMemo<AuthContextValue>(
         () => ({
-            user: session?.user ?? null,
-            session,
+            user,
             isLoading,
-            signIn: async (email: string) => {
-                const { error } = await supabase.auth.signInWithOtp({
-                    email,
-                    options: { emailRedirectTo: window.location.origin },
-                });
-                return { error };
-            },
-            verifyOtp: async (email: string, token: string) => {
-                const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-                return { error };
+            signInWithGoogle: async () => {
+                try {
+                    await pb.collection("users").authWithOAuth2({ provider: "google" });
+                    return { error: null };
+                } catch (err) {
+                    return { error: err instanceof Error ? err : new Error(String(err)) };
+                }
             },
             signOut: async () => {
-                await supabase.auth.signOut();
+                pb.authStore.clear();
             },
         }),
-        [session, isLoading],
+        [user, isLoading],
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

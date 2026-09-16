@@ -15,8 +15,10 @@ export type Genre =
     | "fantasy";
 
 export interface WatchlistItem {
-    /** Composite key: "{mediaType}-{imdbId}" or "manual-{uuid}" */
+    /** Composite key: "{mediaType}-{imdbId}" or "manual-{uuid}". Stored server-side as `client_id`. */
     id: string;
+    /** PocketBase record id, once this item has been synced. */
+    remoteId?: string;
     imdbId: string;
     mediaType: MediaType;
     title: string;
