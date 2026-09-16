@@ -1,3 +1,10 @@
+> **Historical (superseded 2026-09-16).** This is the design of the Supabase
+> sync that shipped as Someday 1.2. The backend is now PocketBase on Bedrock
+> ([Ghaith-Ayadi/Bedrock](https://github.com/Ghaith-Ayadi/Bedrock), `docs/apps.md`);
+> the local-first shape, Dexie schema and conflict rule survived unchanged, the
+> wire format and auth did not. See `README.md` and `src/lib/sync.ts` for what
+> runs today. Kept for the reasoning.
+
 # Someday 1.2 — Supabase Sync + Auth
 
 ## Architecture

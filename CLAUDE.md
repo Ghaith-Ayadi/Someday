@@ -1,3 +1,28 @@
+# Someday
+
+## Backend: PocketBase on Bedrock
+
+The data, realtime and sign-in live on **Bedrock**
+([Ghaith-Ayadi/Bedrock](https://github.com/Ghaith-Ayadi/Bedrock)): one
+self-hosted PocketBase per app. Read
+[docs/apps.md](https://github.com/Ghaith-Ayadi/Bedrock/blob/main/docs/apps.md)
+there before touching anything that talks to the server.
+
+- The app and its API share one origin: `someday.ayadighaith.com` serves the app from Vercel,
+  and PocketBase under `/api/*` and `/_/` (dashboard). `VITE_PB_URL` is that host.
+- **Sign-in is Google only** (`authWithOAuth2({ provider: "google" })`). No
+  passwords, no email codes; do not add any.
+- **Schema is not edited here or in the dashboard.** It is `pb/someday/pb_migrations/*.js`
+  in the Bedrock repo, deployed with its `scripts/deploy.sh`. A schema change is
+  a Bedrock commit; the app change follows.
+- Server-side logic goes in `pb/someday/pb_hooks/` in Bedrock, not in this repo.
+- Collection `watchlist_items`, owner-scoped. `src/lib/sync.ts` and
+  `src/lib/realtime.ts` are the only files that know the wire format; the item's
+  own id is `client_id` server-side and `remoteId` caches the record id. The
+  Dexie schema in `src/lib/db.ts` did not change.
+- Supabase is gone since 2026-09-16. Anything still mentioning it in this repo is
+  history, not instructions.
+
 ## Project Overview
 
 This is an **Untitled UI React** component library project built with:
