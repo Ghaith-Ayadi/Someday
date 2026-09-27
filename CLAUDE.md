@@ -12,10 +12,12 @@ there before touching anything that talks to the server.
   and PocketBase under `/api/*` and `/_/` (dashboard). `VITE_PB_URL` is that host.
 - **Sign-in is Google only** (`authWithOAuth2({ provider: "google" })`). No
   passwords, no email codes; do not add any.
-- **Schema is not edited here or in the dashboard.** It is `pb/someday/pb_migrations/*.js`
-  in the Bedrock repo, deployed with its `scripts/deploy.sh`. A schema change is
-  a Bedrock commit; the app change follows.
-- Server-side logic goes in `pb/someday/pb_hooks/` in Bedrock, not in this repo.
+- **Schema lives in this repo: `pb/pb_migrations/*.js`**, server logic in
+  `pb/pb_hooks/`. Never edit collections in the dashboard (production runs
+  `--automigrate=false`). A schema change ships in the same PR as the app change
+  that needs it. Once merged to `main`, Bedrock deploys it on its next deploy
+  (merge anything to Bedrock `main`, or run its `ci` workflow); a migration
+  archives `pb_data` first. See Bedrock `docs/ci.md`.
 - Collection `watchlist_items`, owner-scoped. `src/lib/sync.ts` and
   `src/lib/realtime.ts` are the only files that know the wire format; the item's
   own id is `client_id` server-side and `remoteId` caches the record id. The
