@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Eye, ReverseLeft, Trash01 } from "@untitledui/icons";
+import { Check, Eye, Heart, ReverseLeft, Trash01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { WatchlistItem } from "@/types/watchlist";
 import { GENRE_BADGE_COLORS } from "@/types/watchlist";
@@ -9,14 +9,16 @@ interface WatchlistCardProps {
     item: WatchlistItem;
     onMarkWatched: () => void;
     onMarkUnwatched: () => void;
+    onToggleRecommended: () => void;
     onRemove: () => void;
     onClick: () => void;
 }
 
-export function WatchlistCard({ item, onMarkWatched, onMarkUnwatched, onRemove, onClick }: WatchlistCardProps) {
+export function WatchlistCard({ item, onMarkWatched, onMarkUnwatched, onToggleRecommended, onRemove, onClick }: WatchlistCardProps) {
     const [isHovered, setIsHovered] = useState(false);
     const { posterUrl: poster } = item;
     const isWatched = item.status === "watched";
+    const isRecommended = !!item.highlyRecommended;
 
     return (
         <div
@@ -39,6 +41,13 @@ export function WatchlistCard({ item, onMarkWatched, onMarkUnwatched, onRemove, 
             {isWatched && (
                 <div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-success-primary">
                     <Check className="size-3.5 text-white" strokeWidth={3} />
+                </div>
+            )}
+
+            {/* Highly recommended badge */}
+            {isRecommended && (
+                <div className="absolute top-2 left-2 flex size-6 items-center justify-center rounded-full bg-error-solid" title="Highly recommended">
+                    <Heart className="size-3.5 fill-white text-white" />
                 </div>
             )}
 
@@ -89,6 +98,21 @@ export function WatchlistCard({ item, onMarkWatched, onMarkUnwatched, onRemove, 
                             <Eye className="size-3.5" />
                         </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleRecommended();
+                        }}
+                        className={cx(
+                            "flex size-7 cursor-pointer items-center justify-center rounded-md backdrop-blur-sm transition duration-100 ease-linear",
+                            isRecommended ? "bg-red-500/80 text-white hover:bg-red-500/60" : "bg-white/20 text-white hover:bg-white/30",
+                        )}
+                        aria-label={isRecommended ? "Remove highly recommended" : "Mark as highly recommended"}
+                        aria-pressed={isRecommended}
+                    >
+                        <Heart className={cx("size-3.5", isRecommended && "fill-white")} />
+                    </button>
                     <button
                         type="button"
                         onClick={(e) => {

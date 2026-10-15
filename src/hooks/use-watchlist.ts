@@ -44,6 +44,11 @@ export function useFilterCounts() {
                 });
             }
 
+            counts.set("marker:recommended", {
+                movies: items.filter((i) => i.highlyRecommended && i.mediaType === "movie").length,
+                series: items.filter((i) => i.highlyRecommended && i.mediaType === "tv").length,
+            });
+
             const allGenres: Genre[] = ["action", "comedy", "drama", "thriller", "horror", "sci-fi", "romance", "animation", "documentary", "fantasy"];
             for (const genre of allGenres) {
                 const key = `genre:${genre}`;
@@ -194,6 +199,12 @@ export async function markAsWatched(id: string) {
 export async function markAsUnwatched(id: string) {
     const now = Date.now();
     await db.items.update(id, { status: "watchlist" as WatchStatus, watchedAt: undefined, updatedAt: now });
+    scheduleSync();
+}
+
+/** Set or clear the "Highly recommended" marker */
+export async function setHighlyRecommended(id: string, value: boolean) {
+    await db.items.update(id, { highlyRecommended: value || undefined, updatedAt: Date.now() });
     scheduleSync();
 }
 

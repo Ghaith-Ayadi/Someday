@@ -12,7 +12,7 @@ import { WatchlistList } from "@/components/app/watchlist-list";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/application/tabs/tabs";
 import { useMovieSearch } from "@/hooks/use-tmdb-search";
 import { useSync } from "@/hooks/use-sync";
-import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, useFilterCounts, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
+import { addToWatchlist, markAsUnwatched, markAsWatched, removeFromWatchlist, setHighlyRecommended, useFilterCounts, useWatchlistCounts, useWatchlistItems } from "@/hooks/use-watchlist";
 import type { TmdbSearchResult } from "@/lib/tmdb";
 import { toMediaType } from "@/lib/tmdb";
 import { useToast } from "@/providers/toast-provider";
@@ -84,6 +84,8 @@ export function WatchlistPage() {
         return statuses;
     }, [filterKeys]);
 
+    const recommendedOnly = filterKeys.has("marker:recommended");
+
     const movieItems = useWatchlistItems("movie", genreFilter.length > 0 ? genreFilter : undefined);
     const tvItems = useWatchlistItems("tv", genreFilter.length > 0 ? genreFilter : undefined);
     const counts = useWatchlistCounts();
@@ -94,16 +96,18 @@ export function WatchlistPage() {
     const filteredMovies = useMemo(() => {
         let items = movieItems;
         if (statusFilter.length > 0) items = items.filter((i) => statusFilter.includes(i.status));
+        if (recommendedOnly) items = items.filter((i) => i.highlyRecommended);
         if (searchQuery.trim()) items = items.filter((i) => i.title.toLowerCase().includes(searchQuery.toLowerCase().trim()));
         return sortItems(items, sort, sortDir);
-    }, [movieItems, statusFilter, sort, sortDir, searchQuery]);
+    }, [movieItems, statusFilter, recommendedOnly, sort, sortDir, searchQuery]);
 
     const filteredTv = useMemo(() => {
         let items = tvItems;
         if (statusFilter.length > 0) items = items.filter((i) => statusFilter.includes(i.status));
+        if (recommendedOnly) items = items.filter((i) => i.highlyRecommended);
         if (searchQuery.trim()) items = items.filter((i) => i.title.toLowerCase().includes(searchQuery.toLowerCase().trim()));
         return sortItems(items, sort, sortDir);
-    }, [tvItems, statusFilter, sort, sortDir, searchQuery]);
+    }, [tvItems, statusFilter, recommendedOnly, sort, sortDir, searchQuery]);
 
     // TMDB fallback: show when local search has 0 results and query is 2+ chars
     const showTmdbFallback = searchQuery.trim().length >= 2 && filteredMovies.length === 0 && filteredTv.length === 0 && !isAddOpen;
@@ -154,22 +158,36 @@ export function WatchlistPage() {
     const handleDetailMarkUnwatched = useCallback(async () => {
         if (activeDetailItem) { await markAsUnwatched(activeDetailItem.id); addToast(`Marked "${activeDetailItem.title}" as unwatched`); handleCloseDetail(); }
     }, [activeDetailItem, addToast, handleCloseDetail]);
+    const handleDetailToggleRecommended = useCallback(async () => {
+        if (activeDetailItem) {
+            const next = !activeDetailItem.highlyRecommended;
+            await setHighlyRecommended(activeDetailItem.id, next);
+            addToast(next ? `Marked "${activeDetailItem.title}" as highly recommended` : `Removed "${activeDetailItem.title}" from highly recommended`);
+            if (detailItem) setDetailItem({ ...detailItem, highlyRecommended: next || undefined });
+        }
+    }, [activeDetailItem, detailItem, addToast]);
     const handleDetailRemove = useCallback(async () => {
         if (activeDetailItem) { await removeFromWatchlist(activeDetailItem.id); addToast(`Removed "${activeDetailItem.title}"`); handleCloseDetail(); }
     }, [activeDetailItem, addToast, handleCloseDetail]);
 
     const handleMarkWatched = useCallback(async (id: string, title: string) => { await markAsWatched(id); addToast(`Marked "${title}" as watched`); }, [addToast]);
     const handleMarkUnwatched = useCallback(async (id: string, title: string) => { await markAsUnwatched(id); addToast(`Marked "${title}" as unwatched`); }, [addToast]);
+    const handleToggleRecommended = useCallback(async (item: WatchlistItem) => {
+        const next = !item.highlyRecommended;
+        await setHighlyRecommended(item.id, next);
+        addToast(next ? `Marked "${item.title}" as highly recommended` : `Removed "${item.title}" from highly recommended`);
+    }, [addToast]);
     const handleRemove = useCallback(async (id: string, title: string) => { await removeFromWatchlist(id); addToast(`Removed "${title}"`); }, [addToast]);
 
     const gridActions = useCallback(
         (items: WatchlistItem[]) => ({
             onMarkWatched: (id: string) => { const item = items.find((i) => i.id === id); if (item) handleMarkWatched(id, item.title); },
             onMarkUnwatched: (id: string) => { const item = items.find((i) => i.id === id); if (item) handleMarkUnwatched(id, item.title); },
+            onToggleRecommended: (id: string) => { const item = items.find((i) => i.id === id); if (item) handleToggleRecommended(item); },
             onRemove: (id: string) => { const item = items.find((i) => i.id === id); if (item) handleRemove(id, item.title); },
             onItemClick: handleItemClick,
         }),
-        [handleMarkWatched, handleMarkUnwatched, handleRemove, handleItemClick],
+        [handleMarkWatched, handleMarkUnwatched, handleToggleRecommended, handleRemove, handleItemClick],
     );
 
     const emptyText = isDesktop ? "Press ⌘K to add movies and series." : "Tap + to add movies and series.";
@@ -263,7 +281,7 @@ export function WatchlistPage() {
             </div>
 
             <SearchOverlay isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSelectItem={handleSearchSelect} onItemAdded={focusOnAdded} />
-            <DetailModal item={activeDetailItem} searchResult={detailSearchResult} isOpen={isDetailOpen} onClose={handleCloseDetail} onAdd={handleDetailAdd} onMarkWatched={handleDetailMarkWatched} onMarkUnwatched={handleDetailMarkUnwatched} onRemove={handleDetailRemove} />
+            <DetailModal item={activeDetailItem} searchResult={detailSearchResult} isOpen={isDetailOpen} onClose={handleCloseDetail} onAdd={handleDetailAdd} onMarkWatched={handleDetailMarkWatched} onMarkUnwatched={handleDetailMarkUnwatched} onToggleRecommended={handleDetailToggleRecommended} onRemove={handleDetailRemove} />
             <ToastContainer />
         </AppLayout>
     );

@@ -7,11 +7,12 @@ interface WatchlistGridProps {
     emptyDescription: string;
     onMarkWatched: (id: string) => void;
     onMarkUnwatched: (id: string) => void;
+    onToggleRecommended: (id: string) => void;
     onRemove: (id: string) => void;
     onItemClick: (item: WatchlistItem) => void;
 }
 
-export function WatchlistGrid({ items, emptyTitle, emptyDescription, onMarkWatched, onMarkUnwatched, onRemove, onItemClick }: WatchlistGridProps) {
+export function WatchlistGrid({ items, emptyTitle, emptyDescription, onMarkWatched, onMarkUnwatched, onToggleRecommended, onRemove, onItemClick }: WatchlistGridProps) {
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
@@ -30,6 +31,7 @@ export function WatchlistGrid({ items, emptyTitle, emptyDescription, onMarkWatch
                     item={item}
                     onMarkWatched={() => onMarkWatched(item.id)}
                     onMarkUnwatched={() => onMarkUnwatched(item.id)}
+                    onToggleRecommended={() => onToggleRecommended(item.id)}
                     onRemove={() => onRemove(item.id)}
                     onClick={() => onItemClick(item)}
                 />

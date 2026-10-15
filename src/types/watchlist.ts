@@ -34,6 +34,8 @@ export interface WatchlistItem {
     syncedAt?: number;
     deletedAt?: number;
     manual?: boolean;
+    /** "Highly recommended" marker, independent of watch status. */
+    highlyRecommended?: boolean;
     // Rich metadata from OMDb detail
     director?: string;
     actors?: string;

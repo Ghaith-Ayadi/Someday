@@ -35,6 +35,7 @@ const SORT_OPTIONS: { id: SortOption; label: string }[] = [
 const FILTER_STATUS: { id: string; label: string }[] = [
     { id: "status:watchlist", label: "To watch" },
     { id: "status:watched", label: "Watched" },
+    { id: "marker:recommended", label: "Highly recommended" },
 ];
 
 export function OptionsSheet(props: OptionsSheetProps) {
@@ -192,7 +193,7 @@ export function OptionsSheet(props: OptionsSheetProps) {
                 <div className="my-1 h-px bg-border-secondary" />
 
                 {/* Filter: Status */}
-                <div className="px-3 pt-1 pb-0.5 text-xs font-semibold text-quaternary">Watch status</div>
+                <div className="px-3 pt-1 pb-0.5 text-xs font-semibold text-quaternary">Status</div>
                 {FILTER_STATUS.map((opt) => {
                     const c = filterCounts.get(opt.id);
                     return (

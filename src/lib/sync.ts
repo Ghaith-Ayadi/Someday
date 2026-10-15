@@ -40,6 +40,7 @@ export interface WatchlistRecord {
     watched_at: number;
     deleted_at: string;
     manual: boolean;
+    highly_recommended: boolean;
     director: string;
     actors: string;
     runtime: string;
@@ -72,6 +73,7 @@ function toRecord(item: WatchlistItem, userId: string) {
         watched_at: item.watchedAt ?? null,
         deleted_at: item.deletedAt ? new Date(item.deletedAt).toISOString() : "",
         manual: item.manual ?? false,
+        highly_recommended: item.highlyRecommended ?? false,
         director: item.director ?? "",
         actors: item.actors ?? "",
         runtime: item.runtime ?? "",
@@ -106,6 +108,7 @@ export function fromRecord(r: WatchlistRecord): WatchlistItem {
         deletedAt: pbDateToMs(r.deleted_at) ?? undefined,
         updatedAt: pbDateToMs(r.updated) ?? Date.now(),
         manual: r.manual,
+        highlyRecommended: r.highly_recommended || undefined,
         director: text(r.director),
         actors: text(r.actors),
         runtime: text(r.runtime),

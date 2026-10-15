@@ -1,4 +1,4 @@
-import { Eye, Plus, ReverseLeft, Star01, Trash01, XClose } from "@untitledui/icons";
+import { Eye, Heart, Plus, ReverseLeft, Star01, Trash01, XClose } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -15,10 +15,11 @@ interface DetailModalProps {
     onAdd: () => void;
     onMarkWatched: () => void;
     onMarkUnwatched: () => void;
+    onToggleRecommended: () => void;
     onRemove: () => void;
 }
 
-export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMarkWatched, onMarkUnwatched, onRemove }: DetailModalProps) {
+export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMarkWatched, onMarkUnwatched, onToggleRecommended, onRemove }: DetailModalProps) {
     if (!isOpen) return null;
 
     const title = item?.title || searchResult?.title || searchResult?.name || "Unknown";
@@ -30,6 +31,7 @@ export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMark
     const mediaType = item?.mediaType || (searchResult ? toMediaType(searchResult.media_type as "movie" | "tv") : "movie");
     const isWatched = item?.status === "watched";
     const isInWatchlist = !!item;
+    const isRecommended = !!item?.highlyRecommended;
 
     return (
         <AnimatePresence>
@@ -76,6 +78,11 @@ export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMark
                                         {mediaType === "movie" ? "Movie" : "Series"}
                                     </Badge>
                                     {year && <span className="text-xs text-tertiary">{year}</span>}
+                                    {isRecommended && (
+                                        <Badge size="sm" color="error">
+                                            Highly recommended
+                                        </Badge>
+                                    )}
                                 </div>
                                 <h2 className="text-lg font-semibold text-primary">{title}</h2>
                             </div>
@@ -112,6 +119,14 @@ export function DetailModal({ item, searchResult, isOpen, onClose, onAdd, onMark
                                                 Watched
                                             </Button>
                                         )}
+                                        <Button
+                                            size="sm"
+                                            color="secondary"
+                                            iconLeading={<Heart data-icon className={isRecommended ? "fill-fg-error-primary text-fg-error-primary" : undefined} />}
+                                            onClick={onToggleRecommended}
+                                            aria-label={isRecommended ? "Remove highly recommended" : "Mark as highly recommended"}
+                                            aria-pressed={isRecommended}
+                                        />
                                         <Button size="sm" color="secondary-destructive" iconLeading={Trash01} onClick={onRemove}>
                                             Remove
                                         </Button>

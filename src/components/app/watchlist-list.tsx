@@ -1,4 +1,4 @@
-import { Check, Eye, ReverseLeft, Trash01 } from "@untitledui/icons";
+import { Check, Eye, Heart, ReverseLeft, Trash01 } from "@untitledui/icons";
 import { Badge } from "@/components/base/badges/badges";
 import type { WatchlistItem } from "@/types/watchlist";
 import { GENRE_BADGE_COLORS } from "@/types/watchlist";
@@ -8,6 +8,7 @@ interface WatchlistListProps {
     items: WatchlistItem[];
     onMarkWatched: (id: string) => void;
     onMarkUnwatched: (id: string) => void;
+    onToggleRecommended: (id: string) => void;
     onRemove: (id: string) => void;
     onItemClick: (item: WatchlistItem) => void;
 }
@@ -16,11 +17,12 @@ function Dot() {
     return <span className="text-quaternary">·</span>;
 }
 
-export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove, onItemClick }: WatchlistListProps) {
+export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onToggleRecommended, onRemove, onItemClick }: WatchlistListProps) {
     return (
         <div className="flex flex-col divide-y divide-secondary">
             {items.map((item) => {
                 const isWatched = item.status === "watched";
+                const isRecommended = !!item.highlyRecommended;
                 const meta = [
                     item.releaseDate,
                     item.runtime,
@@ -51,6 +53,7 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                                     {item.title}
                                 </span>
                                 {isWatched && <Check className="size-3.5 shrink-0 text-fg-success-primary" />}
+                                {isRecommended && <Heart className="size-3.5 shrink-0 fill-fg-error-primary text-fg-error-primary" aria-label="Highly recommended" />}
                                 {item.genres.length > 0 && (
                                     <div className="hidden shrink-0 items-center gap-1 sm:flex">
                                         {item.genres.slice(0, 3).map((genre) => (
@@ -125,6 +128,18 @@ export function WatchlistList({ items, onMarkWatched, onMarkUnwatched, onRemove,
                                     <Eye className="size-3.5" />
                                 </button>
                             )}
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); onToggleRecommended(item.id); }}
+                                className={cx(
+                                    "flex size-7 cursor-pointer items-center justify-center rounded-md transition duration-100 ease-linear hover:bg-secondary",
+                                    isRecommended ? "text-fg-error-primary" : "text-fg-quaternary hover:text-fg-secondary",
+                                )}
+                                aria-label={isRecommended ? "Remove highly recommended" : "Mark as highly recommended"}
+                                aria-pressed={isRecommended}
+                            >
+                                <Heart className={cx("size-3.5", isRecommended && "fill-current")} />
+                            </button>
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
